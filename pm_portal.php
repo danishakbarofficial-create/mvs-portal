@@ -291,46 +291,19 @@ $user = Auth::requireLogin(['pm', 'executive']);
           </div>
         </div>
 
-        <!-- 2-Column Grid: Lifecycle + PO Status -->
-        <div class="dash-grid-2">
-          <!-- Table 1: Contract Billing & Cash Flow Lifecycle -->
-          <div>
-            <div class="dash-section-header" style="margin-top:0;">
-              <h3>
-                <span>Contract Billing &amp; Cash Flow Lifecycle</span>
-              </h3>
-            </div>
-            <div class="table-container">
-              <table class="v4-table">
-                <thead>
-                  <tr>
-                    <th>Contract &amp; Billing Stage</th>
-                    <th style="text-align:right;">Amount (SAR)</th>
-                    <th style="width:140px;text-align:right;">% of Contract</th>
-                  </tr>
-                </thead>
-                <tbody id="lifecycleBody">
-                  <tr><td colspan="3" class="loading-td">Loading lifecycle...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Table 2: Projects by PO Status -->
-          <div>
-            <div class="dash-section-header" style="margin-top:0;">
-              <h3>
-                <span>Projects by PO Status</span>
-              </h3>
-            </div>
-            <div class="table-container">
-              <table class="v4-table">
+        <!-- 2-Column Grid: PO Status + Invoicing Status (Side-by-Side Excel Cards) -->
+        <div class="dash-grid-2" style="margin-bottom: 24px;">
+          <!-- Table 1: Projects by PO Status -->
+          <div class="excel-table-box">
+            <div class="excel-table-title">Projects by PO Status</div>
+            <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+              <table class="excel-grid-table">
                 <thead>
                   <tr>
                     <th>PO Status</th>
-                    <th style="text-align:center;">Milestones</th>
-                    <th style="text-align:right;">Value (SAR)</th>
-                    <th style="width:120px;text-align:right;">% of Total</th>
+                    <th class="text-center" style="width:100px;">Milestone</th>
+                    <th class="text-right">Value (SAR)</th>
+                    <th class="text-right" style="width:110px;">% of Total</th>
                   </tr>
                 </thead>
                 <tbody id="poStatusBody">
@@ -338,6 +311,45 @@ $user = Auth::requireLogin(['pm', 'executive']);
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <!-- Table 2: Milestone Invoicing by Status -->
+          <div class="excel-table-box">
+            <div class="excel-table-title">Milestone Invoicing by Status</div>
+            <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+              <table class="excel-grid-table">
+                <thead>
+                  <tr>
+                    <th>Invoice Status</th>
+                    <th class="text-center" style="width:100px;">Count</th>
+                    <th class="text-right">Value (SAR)</th>
+                    <th class="text-right" style="width:110px;">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceStatusBody">
+                  <tr><td colspan="4" class="loading-td">Loading invoicing status...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table 3: Contract Billing & Cash Flow Lifecycle -->
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">Contract Billing &amp; Cash Flow Lifecycle</div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table">
+              <thead>
+                <tr>
+                  <th>Contract &amp; Billing Stage</th>
+                  <th class="text-right" style="width:260px;">Amount (SAR)</th>
+                  <th class="text-right" style="width:180px;">% of Contract</th>
+                </tr>
+              </thead>
+              <tbody id="lifecycleBody">
+                <tr><td colspan="3" class="loading-td">Loading lifecycle...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -734,36 +746,102 @@ $user = Auth::requireLogin(['pm', 'executive']);
     document.getElementById('collectedPctText').innerText = p.collection_pct + '%';
     document.getElementById('collectedBar').style.width = Math.min(100, p.collection_pct) + '%';
 
-    // Lifecycle Table
-    const lcTbody = document.getElementById('lifecycleBody');
-    if (lcTbody && p.lifecycle_table) {
-      lcTbody.innerHTML = p.lifecycle_table.map(row => `
-        <tr>
-          <td>
-            <span class="stage-dot" style="background-color: ${row.color};"></span>
-            <strong>${escapeHtml(row.stage)}</strong>
-          </td>
-          <td class="sar-cell">${formatSar(row.amount)}</td>
-          <td style="text-align:right;">
-            <span class="badge ${row.stage.includes('Collected') ? 'badge-green' : (row.stage.includes('Pending') ? 'badge-amber' : 'badge-blue')}">
-              ${row.pct_of_contract}%
-            </span>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    // Projects by PO Status Table
+    // 1. Projects by PO Status Table (Exact Excel Row Colors)
     const poTbody = document.getElementById('poStatusBody');
     if (poTbody && p.po_status_table) {
-      poTbody.innerHTML = p.po_status_table.map(row => `
-        <tr>
-          <td>${getPoStatusBadge(row.po_status)}</td>
-          <td style="text-align:center;font-weight:600;">${row.milestone_count}</td>
-          <td class="sar-cell">${formatSar(row.value)}</td>
-          <td style="text-align:right;font-weight:600;">${row.pct_of_total}%</td>
+      const rowClassMap = {
+        'In Progress': 'row-in-progress',
+        'On Hold': 'row-on-hold',
+        'Completed': 'row-completed',
+        'Cancelled': 'row-cancelled'
+      };
+
+      let rowsHtml = p.po_status_table.map(row => {
+        const rowCls = rowClassMap[row.po_status] || '';
+        return `
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.po_status)}</strong></td>
+            <td class="text-center">${row.milestone_count}</td>
+            <td class="sar-cell">${formatSarDec(row.value)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalCount = p.po_status_table.reduce((sum, r) => sum + (r.milestone_count || 0), 0);
+      const totalVal = p.po_status_table.reduce((sum, r) => sum + (r.value || 0), 0);
+      const totalPct = totalVal > 0 ? '100.0%' : '0.0%';
+
+      rowsHtml += `
+        <tr class="excel-total-row">
+          <td><strong>Total Active Projects</strong></td>
+          <td class="text-center">${totalCount}</td>
+          <td class="sar-cell">${formatSarDec(totalVal)}</td>
+          <td class="text-right">${totalPct}</td>
         </tr>
-      `).join('');
+      `;
+      poTbody.innerHTML = rowsHtml;
+    }
+
+    // 2. Milestone Invoicing by Status Table (Exact Excel Row Colors)
+    const invTbody = document.getElementById('invoiceStatusBody');
+    if (invTbody && p.invoice_status_table) {
+      const invRowClassMap = {
+        'Not Invoiced': 'row-not-invoiced',
+        'Partially Invoiced': 'row-partially-invoiced',
+        'Fully Invoiced': 'row-fully-invoiced',
+        'Overdue': 'row-overdue'
+      };
+
+      let rowsHtml = p.invoice_status_table.map(row => {
+        const rowCls = invRowClassMap[row.invoice_status] || '';
+        return `
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.invoice_status)}</strong></td>
+            <td class="text-center">${row.count}</td>
+            <td class="sar-cell">${formatSarDec(row.value)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalInvCount = p.invoice_status_table.reduce((sum, r) => sum + (r.count || 0), 0);
+      const totalInvVal = p.invoice_status_table.reduce((sum, r) => sum + (r.value || 0), 0);
+      const totalInvPct = totalInvVal > 0 ? '100.0%' : '0.0%';
+
+      rowsHtml += `
+        <tr class="excel-total-row">
+          <td><strong>Total Milestones</strong></td>
+          <td class="text-center">${totalInvCount}</td>
+          <td class="sar-cell">${formatSarDec(totalInvVal)}</td>
+          <td class="text-right">${totalInvPct}</td>
+        </tr>
+      `;
+      invTbody.innerHTML = rowsHtml;
+    }
+
+    // 3. Contract Billing & Cash Flow Lifecycle Table (Exact Excel Row Structure)
+    const lcTbody = document.getElementById('lifecycleBody');
+    if (lcTbody && p.lifecycle_table) {
+      lcTbody.innerHTML = p.lifecycle_table.map((row, idx) => {
+        const isTotalRow = (idx === p.lifecycle_table.length - 1) || row.stage.includes('Total Awarded');
+        if (isTotalRow) {
+          return `
+            <tr class="excel-total-row">
+              <td><strong>${escapeHtml(row.stage)}</strong></td>
+              <td class="sar-cell">${formatSarDec(row.amount)}</td>
+              <td class="text-right">${formatPct(row.pct_of_contract)}</td>
+            </tr>
+          `;
+        }
+        return `
+          <tr>
+            <td><strong>${escapeHtml(row.stage)}</strong></td>
+            <td class="sar-cell">${formatSarDec(row.amount)}</td>
+            <td class="text-right">${formatPct(row.pct_of_contract)}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     // Chart 1: Donut (Contract PO Revenue Realization)
@@ -1025,6 +1103,14 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
   function formatSar(num) {
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function formatSarDec(num) {
+    return Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatPct(num) {
+    return Number(num || 0).toFixed(1) + '%';
   }
 
   function renderProjects(records) {

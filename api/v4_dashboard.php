@@ -328,13 +328,13 @@ if ($user['role'] !== 'sales') {
             'color' => '#10B981'
         ],
         [
-            'stage' => 'Pending Collection (Billed, Awaiting Bank Receipt)',
+            'stage' => 'Pending Collection (Billed, Due)',
             'amount' => $pendingCollection,
             'pct_of_contract' => ($totalPoValue > 0) ? round(($pendingCollection / $totalPoValue) * 100, 1) : 0,
             'color' => '#F59E0B'
         ],
         [
-            'stage' => 'To Be Invoiced / Backlog (Unbilled Milestone Scope)',
+            'stage' => 'To Be Invoiced / Backlog',
             'amount' => $toBeInvoiced,
             'pct_of_contract' => ($totalPoValue > 0) ? round(($toBeInvoiced / $totalPoValue) * 100, 1) : 0,
             'color' => '#2878D0'
@@ -346,7 +346,7 @@ if ($user['role'] !== 'sales') {
             'color' => '#64748B'
         ],
         [
-            'stage' => 'Total Awarded PO Value (Contract Baseline)',
+            'stage' => 'Total Awarded PO Value',
             'amount' => $totalPoValue,
             'pct_of_contract' => 100.0,
             'color' => '#172B4D'

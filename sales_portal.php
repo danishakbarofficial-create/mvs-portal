@@ -233,27 +233,25 @@ $user = Auth::requireLogin(['sales', 'executive']);
           </div>
         </div>
 
-        <!-- Table 1: Pipeline Bids by Status -->
-        <div class="dash-section-header">
-          <h3>
-            <span>Pipeline Bids by Status</span>
-          </h3>
-        </div>
-        <div class="table-container" style="margin-bottom: 24px;">
-          <table class="v4-table" id="tableSalesStatus">
-            <thead>
-              <tr>
-                <th>Pipeline Status</th>
-                <th style="text-align:center;">Bid Count</th>
-                <th style="text-align:right;">Value (SAR)</th>
-                <th style="width:200px;">% of Total</th>
-                <th>Expected Closing Range</th>
-              </tr>
-            </thead>
-            <tbody id="salesStatusBody">
-              <tr><td colspan="5" class="loading-td">Loading status breakdown...</td></tr>
-            </tbody>
-          </table>
+        <!-- Table 1: Pipeline Bids by Status (Excel Themed) -->
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">Pipeline Bids by Status</div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table" id="tableSalesStatus">
+              <thead>
+                <tr>
+                  <th>Pipeline Status</th>
+                  <th class="text-center" style="width:110px;">Bid Count</th>
+                  <th class="text-right">Value (SAR)</th>
+                  <th class="text-right" style="width:120px;">% of Total</th>
+                  <th style="width:180px;">Expected Closing Range</th>
+                </tr>
+              </thead>
+              <tbody id="salesStatusBody">
+                <tr><td colspan="5" class="loading-td">Loading status breakdown...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -599,30 +597,42 @@ $user = Auth::requireLogin(['sales', 'executive']);
     const winRate = document.getElementById('dashWinRate');
     if (winRate) winRate.innerText = (s.win_rate_pct ?? s.win_rate ?? 0) + '%';
 
-    // Populate Status breakdown table
+    // Populate Status breakdown table (Exact Excel Row Colors & Total Bar)
     const tbody = document.getElementById('salesStatusBody');
     if (tbody && s.by_status_table) {
+      const salesRowClassMap = {
+        'Information Gathering': 'row-info-gathering',
+        'Under Review': 'row-under-review',
+        'Pricing in Progress': 'row-pricing',
+        'Quotation Submitted': 'row-submitted',
+        'Won': 'row-won',
+        'Lost': 'row-lost',
+        'On Hold': 'row-on-hold'
+      };
+
+      const totalCount = s.by_status_table.reduce((sum, row) => sum + (parseInt(row.count, 10) || 0), 0);
+      const totalVal = s.by_status_table.reduce((sum, row) => sum + (parseFloat(row.total_val) || 0), 0);
+
       tbody.innerHTML = s.by_status_table.map(row => {
-        const badge = getStatusBadge(row.status);
-        const sarVal = Number(row.total_val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        const pct = row.pct_of_total || 0;
+        const rowCls = salesRowClassMap[row.status] || '';
         return `
-          <tr>
-            <td>${badge}</td>
-            <td style="text-align:center;font-weight:700;">${row.count}</td>
-            <td class="sar-cell">${sarVal}</td>
-            <td>
-              <div class="pct-bar-cell">
-                <span class="pct-val-text">${pct}%</span>
-                <div class="pct-bar-bg">
-                  <div class="pct-bar-fill" style="width: ${Math.min(100, pct)}%;"></div>
-                </div>
-              </div>
-            </td>
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.status)}</strong></td>
+            <td class="text-center">${row.count}</td>
+            <td class="sar-cell">${formatSarDec(row.total_val)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
             <td>${escapeHtml(row.expected_closing || '-')}</td>
           </tr>
         `;
-      }).join('');
+      }).join('') + `
+        <tr class="excel-total-row">
+          <td><strong>Total Active Pipeline</strong></td>
+          <td class="text-center">${totalCount}</td>
+          <td class="sar-cell">${formatSarDec(totalVal)}</td>
+          <td class="text-right">${totalVal > 0 ? '100.0%' : '0.0%'}</td>
+          <td>-</td>
+        </tr>
+      `;
     }
 
     // Chart 1: Doughnut (Inquiries by Status)
@@ -787,6 +797,14 @@ $user = Auth::requireLogin(['sales', 'executive']);
 
   function formatSar(num) {
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function formatSarDec(num, dec = 2) {
+    return Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function formatPct(num) {
+    return Number(num || 0).toFixed(1) + '%';
   }
 
   function renderPipeline(records) {

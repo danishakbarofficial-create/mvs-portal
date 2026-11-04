@@ -261,48 +261,44 @@ $user = Auth::requireLogin(['executive']);
         </div>
 
         <!-- Table 1: Pipeline Bids by Status -->
-        <div class="dash-section-header">
-          <h3>
-            <span>Pipeline Bids by Status</span>
-          </h3>
-        </div>
-        <div class="table-container" style="margin-bottom: 24px;">
-          <table class="v4-table" id="tableSalesStatus">
-            <thead>
-              <tr>
-                <th>Pipeline Status</th>
-                <th style="text-align:center;">Bid Count</th>
-                <th style="text-align:right;">Value (SAR)</th>
-                <th style="width:200px;">% of Total</th>
-                <th>Expected Closing Range</th>
-              </tr>
-            </thead>
-            <tbody id="salesStatusBody">
-              <tr><td colspan="5" class="loading-td">Loading status breakdown...</td></tr>
-            </tbody>
-          </table>
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">Pipeline Bids by Status</div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table" id="tableSalesStatus">
+              <thead>
+                <tr>
+                  <th>Pipeline Status</th>
+                  <th class="text-center" style="width:110px;">Bid Count</th>
+                  <th class="text-right">Value (SAR)</th>
+                  <th class="text-right" style="width:120px;">% of Total</th>
+                  <th style="width:180px;">Expected Closing Range</th>
+                </tr>
+              </thead>
+              <tbody id="salesStatusBody">
+                <tr><td colspan="5" class="loading-td">Loading status breakdown...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Excel Table 2: Pipeline by Sales Representative -->
-        <div class="dash-section-header">
-          <h3>
-            <span>Pipeline by Sales Representative</span>
-          </h3>
-        </div>
-        <div class="table-container">
-          <table class="v4-table" id="tableSalesReps">
-            <thead>
-              <tr>
-                <th>Sales Person</th>
-                <th style="text-align:center;">Active Leads</th>
-                <th style="text-align:right;">Pipeline Value (SAR)</th>
-                <th style="text-align:right;">Share %</th>
-              </tr>
-            </thead>
-            <tbody id="salesRepsBody">
-              <tr><td colspan="4" class="loading-td">Loading sales team pipeline...</td></tr>
-            </tbody>
-          </table>
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">Pipeline by Sales Representative</div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table" id="tableSalesReps">
+              <thead>
+                <tr>
+                  <th>Sales Person</th>
+                  <th class="text-center" style="width:120px;">Active Leads</th>
+                  <th class="text-right">Pipeline Value (SAR)</th>
+                  <th class="text-right" style="width:120px;">Share %</th>
+                </tr>
+              </thead>
+              <tbody id="salesRepsBody">
+                <tr><td colspan="4" class="loading-td">Loading sales team pipeline...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -423,46 +419,19 @@ $user = Auth::requireLogin(['executive']);
           </div>
         </div>
 
-        <!-- 2-Column Grid: Lifecycle + PO Status -->
-        <div class="dash-grid-2">
-          <!-- Table 1: Contract Billing & Cash Flow Lifecycle -->
-          <div>
-            <div class="dash-section-header" style="margin-top:0;">
-              <h3>
-                <span>Contract Billing &amp; Cash Flow Lifecycle</span>
-              </h3>
-            </div>
-            <div class="table-container">
-              <table class="v4-table">
-                <thead>
-                  <tr>
-                    <th>Contract &amp; Billing Stage</th>
-                    <th style="text-align:right;">Amount (SAR)</th>
-                    <th style="width:140px;text-align:right;">% of Contract</th>
-                  </tr>
-                </thead>
-                <tbody id="lifecycleBody">
-                  <tr><td colspan="3" class="loading-td">Loading lifecycle...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Table 2: Projects by PO Status -->
-          <div>
-            <div class="dash-section-header" style="margin-top:0;">
-              <h3>
-                <span>Projects by PO Status</span>
-              </h3>
-            </div>
-            <div class="table-container">
-              <table class="v4-table">
+        <!-- 2-Column Grid: PO Status + Invoicing Status (Side-by-Side Excel Cards) -->
+        <div class="dash-grid-2" style="margin-bottom: 24px;">
+          <!-- Table 1: Projects by PO Status -->
+          <div class="excel-table-box">
+            <div class="excel-table-title">Projects by PO Status</div>
+            <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+              <table class="excel-grid-table">
                 <thead>
                   <tr>
                     <th>PO Status</th>
-                    <th style="text-align:center;">Milestone Items</th>
-                    <th style="text-align:right;">Value (SAR)</th>
-                    <th style="width:140px;text-align:right;">% of Total</th>
+                    <th class="text-center" style="width:100px;">Milestone</th>
+                    <th class="text-right">Value (SAR)</th>
+                    <th class="text-right" style="width:110px;">% of Total</th>
                   </tr>
                 </thead>
                 <tbody id="poStatusBody">
@@ -471,55 +440,72 @@ $user = Auth::requireLogin(['executive']);
               </table>
             </div>
           </div>
+
+          <!-- Table 2: Milestone Invoicing by Status -->
+          <div class="excel-table-box">
+            <div class="excel-table-title">Milestone Invoicing by Status</div>
+            <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+              <table class="excel-grid-table">
+                <thead>
+                  <tr>
+                    <th>Invoice Status</th>
+                    <th class="text-center" style="width:100px;">Count</th>
+                    <th class="text-right">Value (SAR)</th>
+                    <th class="text-right" style="width:110px;">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceStatusBody">
+                  <tr><td colspan="4" class="loading-td">Loading invoicing statuses...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <!-- Table 3: Milestone Invoicing by Status -->
-        <div class="dash-section-header">
-          <h3>
-            <span>Milestone Invoicing Status Breakdown</span>
-          </h3>
-        </div>
-        <div class="table-container" style="margin-bottom: 24px;">
-          <table class="v4-table">
-            <thead>
-              <tr>
-                <th>Invoice Status</th>
-                <th style="text-align:center;">Milestone Count</th>
-                <th style="text-align:right;">Value (SAR)</th>
-                <th style="width:200px;text-align:right;">% of Total Invoicing Scope</th>
-              </tr>
-            </thead>
-            <tbody id="invoiceStatusBody">
-              <tr><td colspan="4" class="loading-td">Loading invoicing statuses...</td></tr>
-            </tbody>
-          </table>
+        <!-- Table 3: Contract Billing & Cash Flow Lifecycle -->
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">Contract Billing &amp; Cash Flow Lifecycle</div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table">
+              <thead>
+                <tr>
+                  <th>Contract &amp; Billing Stage</th>
+                  <th class="text-right" style="width:260px;">Amount (SAR)</th>
+                  <th class="text-right" style="width:180px;">% of Contract</th>
+                </tr>
+              </thead>
+              <tbody id="lifecycleBody">
+                <tr><td colspan="3" class="loading-td">Loading lifecycle...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Excel Table 4: Project Manager Delivery & Cash Collection Performance -->
-        <div class="dash-section-header">
-          <h3>
+        <div class="excel-table-box" style="margin-bottom: 24px;">
+          <div class="excel-table-title">
             <span>Project Manager Delivery &amp; Cash Collection Performance</span>
-            <span class="section-tag">PM Operations Governance</span>
-          </h3>
-        </div>
-        <div class="table-container">
-          <table class="v4-table">
-            <thead>
-              <tr>
-                <th>Project Manager</th>
-                <th style="text-align:center;">Projects Count</th>
-                <th style="text-align:center;">Milestones</th>
-                <th style="text-align:right;">Contract Value (SAR)</th>
-                <th style="text-align:right;">Invoiced (SAR)</th>
-                <th style="text-align:right;">Collected (SAR)</th>
-                <th style="text-align:right;">Pending (SAR)</th>
-                <th style="text-align:right;">Collection Efficiency</th>
-              </tr>
-            </thead>
-            <tbody id="pmTableBody">
-              <tr><td colspan="8" class="loading-td">Loading PM performance...</td></tr>
-            </tbody>
-          </table>
+            <span class="section-tag" style="background:#F1F5F9;color:#475569;font-size:0.72rem;padding:3px 8px;border-radius:4px;">PM Operations Governance</span>
+          </div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0;">
+            <table class="excel-grid-table">
+              <thead>
+                <tr>
+                  <th>Project Manager</th>
+                  <th class="text-center">Projects Count</th>
+                  <th class="text-center">Milestones</th>
+                  <th class="text-right">Contract Value (SAR)</th>
+                  <th class="text-right">Invoiced (SAR)</th>
+                  <th class="text-right">Collected (SAR)</th>
+                  <th class="text-right">Pending (SAR)</th>
+                  <th class="text-right" style="width:140px;">Collection Efficiency</th>
+                </tr>
+              </thead>
+              <tbody id="pmTableBody">
+                <tr><td colspan="8" class="loading-td">Loading PM performance...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -777,30 +763,36 @@ $user = Auth::requireLogin(['executive']);
     // Excel Table 1: Pipeline Bids by Status
     const statusTbody = document.getElementById('salesStatusBody');
     if (s.by_status_table && s.by_status_table.length > 0) {
+      const salesRowClassMap = {
+        'Information Gathering': 'row-info-gathering',
+        'Under Review': 'row-under-review',
+        'Pricing in Progress': 'row-pricing',
+        'Quotation Submitted': 'row-submitted',
+        'Won': 'row-won',
+        'Lost': 'row-lost',
+        'On Hold': 'row-on-hold'
+      };
+
       const totalStatusCount = s.by_status_table.reduce((sum, row) => sum + (parseInt(row.count, 10) || 0), 0);
       const totalStatusVal = s.by_status_table.reduce((sum, row) => sum + (parseFloat(row.total_val) || 0), 0);
 
-      statusTbody.innerHTML = s.by_status_table.map(row => `
-        <tr>
-          <td>${getStatusBadge(row.status)}</td>
-          <td style="text-align:center;font-weight:600;">${row.count}</td>
-          <td class="sar-cell">${formatSar(row.total_val)}</td>
-          <td>
-            <div class="pct-bar-cell">
-              <div class="pct-bar-track">
-                <div class="pct-bar-fill" style="width: ${Math.min(100, row.pct_of_total)}%; background-color: ${getDecisionStatusColor(row.status)};"></div>
-              </div>
-              <span style="font-weight:600;font-size:0.75rem;">${row.pct_of_total}%</span>
-            </div>
-          </td>
-          <td><span style="font-size:0.75rem;color:var(--color-text-secondary);">${escapeHtml(row.expected_closing)}</span></td>
-        </tr>
-      `).join('') + `
-        <tr class="total-row">
+      statusTbody.innerHTML = s.by_status_table.map(row => {
+        const rowCls = salesRowClassMap[row.status] || '';
+        return `
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.status)}</strong></td>
+            <td class="text-center">${row.count}</td>
+            <td class="sar-cell">${formatSarDec(row.total_val, 2)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
+            <td>${escapeHtml(row.expected_closing || '-')}</td>
+          </tr>
+        `;
+      }).join('') + `
+        <tr class="excel-total-row">
           <td><strong>Total Active Pipeline</strong></td>
-          <td style="text-align:center;font-weight:700;">${totalStatusCount}</td>
-          <td class="sar-cell" style="font-weight:700;">${formatSar(totalStatusVal)}</td>
-          <td style="font-weight:700;">${totalStatusVal > 0 ? '100.0%' : '0%'}</td>
+          <td class="text-center">${totalStatusCount}</td>
+          <td class="sar-cell">${formatSarDec(totalStatusVal, 2)}</td>
+          <td class="text-right">${totalStatusVal > 0 ? '100.0%' : '0.0%'}</td>
           <td>-</td>
         </tr>
       `;
@@ -819,17 +811,17 @@ $user = Auth::requireLogin(['executive']);
         return `
           <tr>
             <td><strong>${escapeHtml(r.salesperson)}</strong></td>
-            <td style="text-align:center;font-weight:600;">${leads}</td>
+            <td class="text-center">${leads}</td>
             <td class="sar-cell">${formatSarDec(pipeVal, 2)}</td>
-            <td style="text-align:right;font-weight:600;">${sharePct}</td>
+            <td class="text-right">${sharePct}</td>
           </tr>
         `;
       }).join('') + `
-        <tr class="total-row">
+        <tr class="excel-total-row">
           <td><strong>Total Team Pipeline</strong></td>
-          <td style="text-align:center;font-weight:700;">${totalLeads}</td>
-          <td class="sar-cell" style="font-weight:700;">${formatSarDec(totalPipe, 2)}</td>
-          <td style="text-align:right;font-weight:700;">${totalPipe > 0 ? '100.0%' : '0.0%'}</td>
+          <td class="text-center">${totalLeads}</td>
+          <td class="sar-cell">${formatSarDec(totalPipe, 2)}</td>
+          <td class="text-right">${totalPipe > 0 ? '100.0%' : '0.0%'}</td>
         </tr>
       `;
     }
@@ -848,74 +840,151 @@ $user = Auth::requireLogin(['executive']);
     document.getElementById('collectedPctText').innerText = p.collection_pct + '%';
     document.getElementById('collectedBar').style.width = Math.min(100, p.collection_pct) + '%';
 
-    // Excel Table 1: Lifecycle
-    const lcTbody = document.getElementById('lifecycleBody');
-    if (p.lifecycle_table) {
-      lcTbody.innerHTML = p.lifecycle_table.map(row => `
-        <tr>
-          <td>
-            <span class="stage-dot" style="background-color: ${row.color};"></span>
-            <strong>${escapeHtml(row.stage)}</strong>
-          </td>
-          <td class="sar-cell">${formatSar(row.amount)}</td>
-          <td style="text-align:right;">
-            <span class="badge ${row.stage.includes('Collected') ? 'badge-green' : (row.stage.includes('Pending') ? 'badge-amber' : 'badge-blue')}">
-              ${row.pct_of_contract}%
-            </span>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    // Excel Table 2: PO Status
+    // 1. Projects by PO Status Table (Exact Excel Row Colors)
     const poTbody = document.getElementById('poStatusBody');
-    if (p.po_status_table) {
-      poTbody.innerHTML = p.po_status_table.map(row => `
-        <tr>
-          <td>${getPoStatusBadge(row.po_status)}</td>
-          <td style="text-align:center;font-weight:600;">${row.milestone_count}</td>
-          <td class="sar-cell">${formatSar(row.value)}</td>
-          <td style="text-align:right;font-weight:600;">${row.pct_of_total}%</td>
+    if (poTbody && p.po_status_table) {
+      const rowClassMap = {
+        'In Progress': 'row-in-progress',
+        'On Hold': 'row-on-hold',
+        'Completed': 'row-completed',
+        'Cancelled': 'row-cancelled'
+      };
+
+      let rowsHtml = p.po_status_table.map(row => {
+        const rowCls = rowClassMap[row.po_status] || '';
+        return `
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.po_status)}</strong></td>
+            <td class="text-center">${row.milestone_count}</td>
+            <td class="sar-cell">${formatSarDec(row.value, 2)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalCount = p.po_status_table.reduce((sum, r) => sum + (r.milestone_count || 0), 0);
+      const totalVal = p.po_status_table.reduce((sum, r) => sum + (r.value || 0), 0);
+      const totalPct = totalVal > 0 ? '100.0%' : '0.0%';
+
+      rowsHtml += `
+        <tr class="excel-total-row">
+          <td><strong>Total Active Projects</strong></td>
+          <td class="text-center">${totalCount}</td>
+          <td class="sar-cell">${formatSarDec(totalVal, 2)}</td>
+          <td class="text-right">${totalPct}</td>
         </tr>
-      `).join('');
+      `;
+      poTbody.innerHTML = rowsHtml;
     }
 
-    // Excel Table 3: Milestone Invoicing Status
+    // 2. Milestone Invoicing by Status Table (Exact Excel Row Colors)
     const invTbody = document.getElementById('invoiceStatusBody');
-    if (p.invoice_status_table) {
-      invTbody.innerHTML = p.invoice_status_table.map(row => `
-        <tr>
-          <td>${getInvoiceBadge(row.invoice_status)}</td>
-          <td style="text-align:center;font-weight:600;">${row.count}</td>
-          <td class="sar-cell">${formatSar(row.value)}</td>
-          <td style="text-align:right;">
-            <span class="badge ${row.invoice_status === 'Fully Invoiced' ? 'badge-green' : (row.invoice_status === 'Partially Invoiced' ? 'badge-amber' : 'badge-gray')}">
-              ${row.pct_of_total}%
-            </span>
-          </td>
+    if (invTbody && p.invoice_status_table) {
+      const invRowClassMap = {
+        'Not Invoiced': 'row-not-invoiced',
+        'Partially Invoiced': 'row-partially-invoiced',
+        'Fully Invoiced': 'row-fully-invoiced',
+        'Overdue': 'row-overdue'
+      };
+
+      let rowsHtml = p.invoice_status_table.map(row => {
+        const rowCls = invRowClassMap[row.invoice_status] || '';
+        return `
+          <tr class="${rowCls}">
+            <td><strong>${escapeHtml(row.invoice_status)}</strong></td>
+            <td class="text-center">${row.count}</td>
+            <td class="sar-cell">${formatSarDec(row.value, 2)}</td>
+            <td class="text-right">${formatPct(row.pct_of_total)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalInvCount = p.invoice_status_table.reduce((sum, r) => sum + (r.count || 0), 0);
+      const totalInvVal = p.invoice_status_table.reduce((sum, r) => sum + (r.value || 0), 0);
+      const totalInvPct = totalInvVal > 0 ? '100.0%' : '0.0%';
+
+      rowsHtml += `
+        <tr class="excel-total-row">
+          <td><strong>Total Milestones</strong></td>
+          <td class="text-center">${totalInvCount}</td>
+          <td class="sar-cell">${formatSarDec(totalInvVal, 2)}</td>
+          <td class="text-right">${totalInvPct}</td>
         </tr>
-      `).join('');
+      `;
+      invTbody.innerHTML = rowsHtml;
     }
 
-    // Excel Table 4: PM Performance
+    // 3. Contract Billing & Cash Flow Lifecycle Table (Exact Excel Row Structure)
+    const lcTbody = document.getElementById('lifecycleBody');
+    if (lcTbody && p.lifecycle_table) {
+      lcTbody.innerHTML = p.lifecycle_table.map((row, idx) => {
+        const isTotalRow = (idx === p.lifecycle_table.length - 1) || row.stage.includes('Total Awarded');
+        if (isTotalRow) {
+          return `
+            <tr class="excel-total-row">
+              <td><strong>${escapeHtml(row.stage)}</strong></td>
+              <td class="sar-cell">${formatSarDec(row.amount, 2)}</td>
+              <td class="text-right">${formatPct(row.pct_of_contract)}</td>
+            </tr>
+          `;
+        }
+        return `
+          <tr>
+            <td><strong>${escapeHtml(row.stage)}</strong></td>
+            <td class="sar-cell">${formatSarDec(row.amount, 2)}</td>
+            <td class="text-right">${formatPct(row.pct_of_contract)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 4. Excel Table 4: PM Performance Table
     const pmTbody = document.getElementById('pmTableBody');
     if (p.pm_table) {
-      pmTbody.innerHTML = p.pm_table.map(r => `
-        <tr>
-          <td><strong>${escapeHtml(r.pm)}</strong></td>
-          <td style="text-align:center;font-weight:600;">${r.projects_count}</td>
-          <td style="text-align:center;">${r.milestones_count}</td>
-          <td class="sar-cell">${formatSar(r.total_value)}</td>
-          <td class="sar-cell">${formatSar(r.invoiced)}</td>
-          <td class="sar-cell" style="color:#059669;font-weight:600;">${formatSar(r.collected)}</td>
-          <td class="sar-cell" style="color:#B45309;font-weight:600;">${formatSar(r.pending)}</td>
-          <td style="text-align:right;">
-            <span class="badge ${r.collection_efficiency >= 80 ? 'badge-green' : (r.collection_efficiency >= 40 ? 'badge-amber' : 'badge-gray')}">
-              ${r.collection_efficiency}%
-            </span>
-          </td>
+      let totalPmProj = 0, totalPmMs = 0, totalPmVal = 0, totalPmInv = 0, totalPmCol = 0, totalPmPend = 0;
+      let rows = p.pm_table.map(r => {
+        const pCnt = parseInt(r.projects_count, 10) || 0;
+        const mCnt = parseInt(r.milestones_count, 10) || 0;
+        const val = parseFloat(r.total_value) || 0;
+        const inv = parseFloat(r.invoiced) || 0;
+        const col = parseFloat(r.collected) || 0;
+        const pend = parseFloat(r.pending) || 0;
+
+        totalPmProj += pCnt;
+        totalPmMs += mCnt;
+        totalPmVal += val;
+        totalPmInv += inv;
+        totalPmCol += col;
+        totalPmPend += pend;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(r.pm)}</strong></td>
+            <td class="text-center">${pCnt}</td>
+            <td class="text-center">${mCnt}</td>
+            <td class="sar-cell">${formatSarDec(val, 2)}</td>
+            <td class="sar-cell">${formatSarDec(inv, 2)}</td>
+            <td class="sar-cell" style="color:#059669;font-weight:600;">${formatSarDec(col, 2)}</td>
+            <td class="sar-cell" style="color:#B45309;font-weight:600;">${formatSarDec(pend, 2)}</td>
+            <td class="text-right" style="font-weight:700;">${r.collection_efficiency}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalPmEff = (totalPmInv > 0) ? Math.round((totalPmCol / totalPmInv) * 100) : 0;
+      rows += `
+        <tr class="excel-total-row">
+          <td><strong>Total PM Delivery</strong></td>
+          <td class="text-center">${totalPmProj}</td>
+          <td class="text-center">${totalPmMs}</td>
+          <td class="sar-cell">${formatSarDec(totalPmVal, 2)}</td>
+          <td class="sar-cell">${formatSarDec(totalPmInv, 2)}</td>
+          <td class="sar-cell">${formatSarDec(totalPmCol, 2)}</td>
+          <td class="sar-cell">${formatSarDec(totalPmPend, 2)}</td>
+          <td class="text-right">${totalPmEff}%</td>
         </tr>
-      `).join('');
+      `;
+      pmTbody.innerHTML = rows;
     }
 
     // =====================================================================
@@ -1301,6 +1370,10 @@ $user = Auth::requireLogin(['executive']);
 
   function formatSarDec(num, dec = 2) {
     return Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function formatPct(num) {
+    return Number(num || 0).toFixed(1) + '%';
   }
 
   function escapeHtml(str) {
