@@ -1,0 +1,13 @@
+# MVS ICT & Telecom - Web Configuration
+Options -Indexes
+
+# Block direct access to database, backup and config files
+<FilesMatch "\.(sqlite|sqlite3|db|bak|log)$">
+    Require all denied
+</FilesMatch>
+
+<Files ".env">
+    Require all denied
+</Files>
+
+AddDefaultCharset UTF-8
