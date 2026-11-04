@@ -12,6 +12,7 @@ $user = Auth::requireLogin(['pm', 'executive']);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/portal.css?v=<?= time() ?>">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -58,11 +59,19 @@ $user = Auth::requireLogin(['pm', 'executive']);
       <?php endif; ?>
 
       <div class="nav-section-label"><?= ($user['role'] === 'pm') ? 'Operations Workspace' : 'Projects Register' ?></div>
-      <a href="pm_portal.php" class="nav-item active">
+      <a href="javascript:void(0)" onclick="switchTab('projects-dash')" class="nav-item active" id="nav-item-projects-dash">
+        <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span class="nav-item-text">Projects Dashboard</span>
+      </a>
+
+      <a href="javascript:void(0)" onclick="switchTab('projects-register')" class="nav-item" id="nav-item-projects-register">
         <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span class="nav-item-text"><?= ($user['role'] === 'pm') ? 'My Projects & Milestones' : 'Projects' ?></span>
+        <span class="nav-item-text"><?= ($user['role'] === 'pm') ? 'My Projects & Milestones' : 'Projects Register' ?></span>
       </a>
 
       <?php if ($user['role'] === 'admin'): ?>
@@ -137,107 +146,284 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
     <!-- Main Content Canvas -->
     <main class="portal-main">
-      <div class="page-header-row">
-        <div class="page-header-title-box">
-          <h1>Projects</h1>
-          <p>Post-award operational delivery tracking, milestone deliverables, invoicing, and cash collections.</p>
-        </div>
-        <div class="page-header-actions">
-          <button class="btn btn-secondary" onclick="exportCsv()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Export CSV</span>
-          </button>
-          <button class="btn btn-primary" onclick="openCreateModal()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Add Milestone / PO</span>
-          </button>
-        </div>
+      <div class="exec-nav-tabs">
+        <button class="exec-tab-btn active" id="btn-tab-projects-dash" onclick="switchTab('projects-dash')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Projects Dashboard</span>
+        </button>
+        <button class="exec-tab-btn" id="btn-tab-projects-register" onclick="switchTab('projects-register')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Milestones Register</span>
+        </button>
       </div>
 
-      <!-- Top Stats Row -->
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-blue">
-          <div class="kpi-label">Awarded PO Value</div>
-          <div class="kpi-val" id="myPoVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Total contracted value of projects</div>
-        </div>
-        <div class="kpi-card highlight-won">
-          <div class="kpi-label">Cash Collected</div>
-          <div class="kpi-val" id="myCollectedVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Payments received into bank</div>
-        </div>
-        <div class="kpi-card highlight-review">
-          <div class="kpi-label">Pending Collection</div>
-          <div class="kpi-val" id="myPendingVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Invoiced but pending client payment</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">To Be Invoiced (Backlog)</div>
-          <div class="kpi-val" id="myBacklogVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Remaining unbilled PO milestones</div>
-        </div>
-      </div>
-
-      <!-- Filter & Action Bar -->
-      <div class="action-bar">
-        <div class="action-left">
-          <div class="search-box">
-            <svg class="search-box-icon" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search project, customer, PO, invoice..." onkeyup="filterProjects()">
+      <!-- ===================================================================
+           TAB 1: Projects Dashboard (Faithful to Excel 'Projects Dashboard' Sheet)
+           =================================================================== -->
+      <div class="tab-content active" id="tab-projects-dash">
+        <div class="action-bar" style="margin-bottom: 20px;">
+          <div class="action-left">
+            <label style="font-size:0.82rem;font-weight:600;color:var(--color-text-secondary);display:flex;align-items:center;gap:10px;">
+              <span>Select Project:</span>
+              <select id="dashProjectSelect" onchange="loadDashboardMetrics(this.value)" style="width:360px;">
+                <option value="All My Projects">All My Projects</option>
+              </select>
+            </label>
           </div>
-          <select id="projectSelect" onchange="filterProjects()">
-            <option value="">All My Projects</option>
-          </select>
-          <select id="milestoneStatusFilter" onchange="filterProjects()">
-            <option value="">All Milestone Statuses</option>
-            <option value="Completed">Completed</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Pending">Pending</option>
-            <option value="On Hold">On Hold</option>
-          </select>
+          <div class="action-right">
+            <button class="btn btn-primary" onclick="openCreateModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>+ Add Milestone / PO</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Top KPI Cards -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+          <div class="kpi-card highlight-blue">
+            <div class="kpi-label">Awarded PO Value</div>
+            <div class="kpi-val" id="dashTotalPoVal">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Total contracted commitments</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Invoiced</div>
+            <div class="kpi-val" id="dashTotalInvoiced">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Billed milestone deliveries</div>
+          </div>
+          <div class="kpi-card highlight-review">
+            <div class="kpi-label">To Be Invoiced / Backlog</div>
+            <div class="kpi-val" id="dashBacklogVal">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Unbilled contracted balance</div>
+          </div>
+          <div class="kpi-card highlight-won">
+            <div class="kpi-label">Cash Collected</div>
+            <div class="kpi-val" id="dashCashCollected">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Received payments to bank</div>
+          </div>
+          <div class="kpi-card highlight-review">
+            <div class="kpi-label">Pending Collection</div>
+            <div class="kpi-val" id="dashPendingCollection">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Billed awaiting settlement</div>
+          </div>
+        </div>
+
+        <!-- 2 Top Progress Tracking Bars -->
+        <div class="dash-grid-2">
+          <div class="dash-progress-card">
+            <div class="dash-progress-meta">
+              <span class="dash-progress-title">Invoiced of PO Target</span>
+              <span class="dash-progress-val" id="invoicedPctText">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="invoicedBar" style="width: 0%; background: #0284C7;"></div>
+            </div>
+          </div>
+          <div class="dash-progress-card">
+            <div class="dash-progress-meta">
+              <span class="dash-progress-title">Cash Collected of Invoiced</span>
+              <span class="dash-progress-val" id="collectedPctText">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="collectedBar" style="width: 0%; background: #10B981;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Project & Cash Flow Visual Analytics -->
+        <div class="dash-section-header">
+          <h3>
+            <span>Project &amp; Cash Flow Visual Analytics</span>
+            <span class="section-tag">Visual Overview</span>
+          </h3>
+        </div>
+
+        <!-- Row 1: Donut (Revenue Realization) + Grouped Bar (Cash Flow & Collections) -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>Contract PO Revenue Realization</span>
+              <span class="section-tag" style="font-size:0.68rem;">Billed vs Unbilled PO Balance</span>
+            </div>
+            <div class="chart-container" style="position:relative; height:280px;">
+              <canvas id="projDonutRevenue"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>Invoice Cash Flow &amp; Collections (SAR)</span>
+              <span class="section-tag" style="font-size:0.68rem;">Milestone Cash Flow Cycle</span>
+            </div>
+            <div class="chart-container" style="position:relative; height:280px;">
+              <canvas id="projBarMilestoneCash"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Bar (Milestone Deliveries by PO Status) + Bar (Contract Realization & Cash Flow) -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>Milestone Deliveries by PO Status</span>
+              <span class="section-tag" style="font-size:0.68rem;">Delivery Governance</span>
+            </div>
+            <div class="chart-container" style="position:relative; height:280px;">
+              <canvas id="projBarPoStatus"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>Contract Realization &amp; Cash Flow</span>
+              <span class="section-tag" style="font-size:0.68rem;">Collected vs Due vs Backlog</span>
+            </div>
+            <div class="chart-container" style="position:relative; height:280px;">
+              <canvas id="projBarContractRealization"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Grid: Lifecycle + PO Status -->
+        <div class="dash-grid-2">
+          <!-- Table 1: Contract Billing & Cash Flow Lifecycle -->
+          <div>
+            <div class="dash-section-header" style="margin-top:0;">
+              <h3>
+                <span>Contract Billing &amp; Cash Flow Lifecycle</span>
+              </h3>
+            </div>
+            <div class="table-container">
+              <table class="v4-table">
+                <thead>
+                  <tr>
+                    <th>Contract &amp; Billing Stage</th>
+                    <th style="text-align:right;">Amount (SAR)</th>
+                    <th style="width:140px;text-align:right;">% of Contract</th>
+                  </tr>
+                </thead>
+                <tbody id="lifecycleBody">
+                  <tr><td colspan="3" class="loading-td">Loading lifecycle...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 2: Projects by PO Status -->
+          <div>
+            <div class="dash-section-header" style="margin-top:0;">
+              <h3>
+                <span>Projects by PO Status</span>
+              </h3>
+            </div>
+            <div class="table-container">
+              <table class="v4-table">
+                <thead>
+                  <tr>
+                    <th>PO Status</th>
+                    <th style="text-align:center;">Milestones</th>
+                    <th style="text-align:right;">Value (SAR)</th>
+                    <th style="width:120px;text-align:right;">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody id="poStatusBody">
+                  <tr><td colspan="4" class="loading-td">Loading PO status...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- v4 Projects Data Table (26 Columns) -->
-      <div class="table-container">
-        <table class="v4-table" id="projectsTable">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Project Manager</th>
-              <th>Project Name</th>
-              <th>Customer</th>
-              <th>PO No.</th>
-              <th style="text-align:right;">Total PO (SAR)</th>
-              <th>Milestone #</th>
-              <th>Milestone Description</th>
-              <th style="text-align:right;">Milestone SAR</th>
-              <th>Milestone Status</th>
-              <th>Tech Report</th>
-              <th>Invoice Status</th>
-              <th>Invoice No.</th>
-              <th style="text-align:right;">Invoiced SAR</th>
-              <th style="text-align:right;">Collected SAR</th>
-              <th style="text-align:right;">Pending SAR</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="projectsTableBody">
-            <tr>
-              <td colspan="17" class="loading-td">Loading project milestones...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- ===================================================================
+           TAB 2: My Projects & Milestones Register
+           =================================================================== -->
+      <div class="tab-content" id="tab-projects-register">
+        <div class="page-header-row">
+          <div class="page-header-title-box">
+            <h1><?= ($user['role'] === 'pm') ? 'My Projects &amp; Milestones' : 'Projects Register' ?></h1>
+            <p>Post-award operational delivery tracking, milestone deliverables, invoicing, and cash collections.</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="exportCsv()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add Milestone / PO</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Action Bar -->
+        <div class="action-bar">
+          <div class="action-left">
+            <div class="search-box">
+              <svg class="search-box-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Search project, customer, PO, invoice..." onkeyup="filterProjects()">
+            </div>
+            <select id="projectSelect" onchange="filterProjects()">
+              <option value="">All My Projects</option>
+            </select>
+            <select id="milestoneStatusFilter" onchange="filterProjects()">
+              <option value="">All Milestone Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- v4 Projects Data Table (26 Columns) -->
+        <div class="table-container">
+          <table class="v4-table" id="projectsTable">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Project Manager</th>
+                <th>Project Name</th>
+                <th>Customer</th>
+                <th>PO No.</th>
+                <th style="text-align:right;">Total PO (SAR)</th>
+                <th>Milestone #</th>
+                <th>Milestone Description</th>
+                <th style="text-align:right;">Milestone SAR</th>
+                <th>Milestone Status</th>
+                <th>Tech Report</th>
+                <th>Invoice Status</th>
+                <th>Invoice No.</th>
+                <th style="text-align:right;">Invoiced SAR</th>
+                <th style="text-align:right;">Collected SAR</th>
+                <th style="text-align:right;">Pending SAR</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTableBody">
+              <tr>
+                <td colspan="17" class="loading-td">Loading project milestones...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>
@@ -480,6 +666,10 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
 <script>
   let allRecords = [];
+  let projDonutRevenueInstance = null;
+  let projBarPoStatusInstance = null;
+  let projBarMilestoneCashInstance = null;
+  let projBarContractRealizationInstance = null;
 
   function toggleSidebar() {
     const sb = document.getElementById('appSidebar');
@@ -488,6 +678,303 @@ $user = Auth::requireLogin(['pm', 'executive']);
     } else {
       sb.classList.toggle('collapsed');
     }
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.exec-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
+
+    const btn = document.getElementById('btn-tab-' + tabId);
+    if (btn) btn.classList.add('active');
+
+    const content = document.getElementById('tab-' + tabId);
+    if (content) content.classList.add('active');
+
+    const nav = document.getElementById('nav-item-' + tabId);
+    if (nav) nav.classList.add('active');
+
+    if (window.innerWidth <= 1024) {
+      document.getElementById('appSidebar').classList.remove('mobile-open');
+    }
+  }
+
+  async function loadDashboardMetrics(projectName = '') {
+    try {
+      const url = projectName ? `api/v4_dashboard.php?project_name=${encodeURIComponent(projectName)}` : 'api/v4_dashboard.php';
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.success && json.projects_dashboard) {
+        if (json.projects_list && json.projects_list.length > 0) {
+          const select = document.getElementById('dashProjectSelect');
+          if (select) {
+            const currentVal = projectName || select.value || json.projects_list[0];
+            select.innerHTML = json.projects_list.map(p => 
+              `<option value="${escapeHtml(p)}" ${p === currentVal ? 'selected' : ''}>${escapeHtml(p)}</option>`
+            ).join('');
+          }
+        }
+        renderProjectsDashboard(json.projects_dashboard);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard metrics:', err);
+    }
+  }
+
+  function renderProjectsDashboard(p) {
+    document.getElementById('dashTotalPoVal').innerHTML = formatSar(p.total_po_value) + ' <span class="curr">SAR</span>';
+    document.getElementById('dashTotalInvoiced').innerHTML = formatSar(p.total_invoiced) + ' <span class="curr">SAR</span>';
+    document.getElementById('dashBacklogVal').innerHTML = formatSar(p.to_be_invoiced_backlog) + ' <span class="curr">SAR</span>';
+    document.getElementById('dashCashCollected').innerHTML = formatSar(p.total_cash_collected) + ' <span class="curr">SAR</span>';
+    document.getElementById('dashPendingCollection').innerHTML = formatSar(p.pending_collection) + ' <span class="curr">SAR</span>';
+
+    document.getElementById('invoicedPctText').innerText = p.invoiced_pct + '%';
+    document.getElementById('invoicedBar').style.width = Math.min(100, p.invoiced_pct) + '%';
+
+    document.getElementById('collectedPctText').innerText = p.collection_pct + '%';
+    document.getElementById('collectedBar').style.width = Math.min(100, p.collection_pct) + '%';
+
+    // Lifecycle Table
+    const lcTbody = document.getElementById('lifecycleBody');
+    if (lcTbody && p.lifecycle_table) {
+      lcTbody.innerHTML = p.lifecycle_table.map(row => `
+        <tr>
+          <td>
+            <span class="stage-dot" style="background-color: ${row.color};"></span>
+            <strong>${escapeHtml(row.stage)}</strong>
+          </td>
+          <td class="sar-cell">${formatSar(row.amount)}</td>
+          <td style="text-align:right;">
+            <span class="badge ${row.stage.includes('Collected') ? 'badge-green' : (row.stage.includes('Pending') ? 'badge-amber' : 'badge-blue')}">
+              ${row.pct_of_contract}%
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Projects by PO Status Table
+    const poTbody = document.getElementById('poStatusBody');
+    if (poTbody && p.po_status_table) {
+      poTbody.innerHTML = p.po_status_table.map(row => `
+        <tr>
+          <td>${getPoStatusBadge(row.po_status)}</td>
+          <td style="text-align:center;font-weight:600;">${row.milestone_count}</td>
+          <td class="sar-cell">${formatSar(row.value)}</td>
+          <td style="text-align:right;font-weight:600;">${row.pct_of_total}%</td>
+        </tr>
+      `).join('');
+    }
+
+    // Chart 1: Donut (Contract PO Revenue Realization)
+    if (p.chart_revenue_realization && document.getElementById('projDonutRevenue')) {
+      const ctxDonut = document.getElementById('projDonutRevenue').getContext('2d');
+      if (projDonutRevenueInstance) projDonutRevenueInstance.destroy();
+      projDonutRevenueInstance = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+          labels: p.chart_revenue_realization.labels,
+          datasets: [{
+            data: p.chart_revenue_realization.values,
+            backgroundColor: ['#0284C7', '#1E293B'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#475569',
+                font: { family: 'Inter', size: 11, weight: '500' },
+                padding: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' ' + ctx.label + ': ' + formatSar(ctx.raw) + ' SAR';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 2: Milestone Deliveries by PO Status
+    if (p.chart_po_status && document.getElementById('projBarPoStatus')) {
+      const ctxPo = document.getElementById('projBarPoStatus').getContext('2d');
+      if (projBarPoStatusInstance) projBarPoStatusInstance.destroy();
+      projBarPoStatusInstance = new Chart(ctxPo, {
+        type: 'bar',
+        data: {
+          labels: p.chart_po_status.labels,
+          datasets: [{
+            label: 'Milestone Items',
+            data: p.chart_po_status.counts,
+            backgroundColor: '#10B981',
+            borderRadius: 6,
+            maxBarThickness: 46
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#64748B', font: { family: 'Inter', size: 11 } }, grid: { display: false } },
+            y: { 
+              beginAtZero: true, 
+              ticks: { 
+                stepSize: 1, 
+                precision: 0, 
+                color: '#64748B', 
+                font: { family: 'Inter', size: 11 } 
+              }, 
+              grid: { color: '#EDF2F7' } 
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' Milestone Items: ' + ctx.raw;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 3: Grouped Bar (Invoice Cash Flow & Collections SAR)
+    if (p.chart_milestone_cashflow && document.getElementById('projBarMilestoneCash')) {
+      const ctxCash = document.getElementById('projBarMilestoneCash').getContext('2d');
+      if (projBarMilestoneCashInstance) projBarMilestoneCashInstance.destroy();
+      projBarMilestoneCashInstance = new Chart(ctxCash, {
+        type: 'bar',
+        data: {
+          labels: p.chart_milestone_cashflow.labels,
+          datasets: [
+            {
+              label: 'Invoiced Amount (SAR)',
+              data: p.chart_milestone_cashflow.invoiced,
+              backgroundColor: '#8B5CF6',
+              borderRadius: 4,
+              maxBarThickness: 32
+            },
+            {
+              label: 'Received Payment (SAR)',
+              data: p.chart_milestone_cashflow.received,
+              backgroundColor: '#10B981',
+              borderRadius: 4,
+              maxBarThickness: 32
+            },
+            {
+              label: 'Pending Balance (SAR)',
+              data: p.chart_milestone_cashflow.pending,
+              backgroundColor: '#F59E0B',
+              borderRadius: 4,
+              maxBarThickness: 32
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#64748B', font: { family: 'Inter', size: 11 } }, grid: { display: false } },
+            y: { 
+              beginAtZero: true, 
+              ticks: { 
+                color: '#64748B', 
+                font: { family: 'Inter', size: 11 },
+                callback: function(v) { return formatSar(v); }
+              }, 
+              grid: { color: '#EDF2F7' } 
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#475569',
+                font: { family: 'Inter', size: 11, weight: '500' },
+                padding: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' ' + ctx.dataset.label + ': ' + formatSar(ctx.raw) + ' SAR';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 4: Bar (Contract Realization & Cash Flow)
+    if (p.chart_contract_realization && document.getElementById('projBarContractRealization')) {
+      const ctxReal = document.getElementById('projBarContractRealization').getContext('2d');
+      if (projBarContractRealizationInstance) projBarContractRealizationInstance.destroy();
+      projBarContractRealizationInstance = new Chart(ctxReal, {
+        type: 'bar',
+        data: {
+          labels: p.chart_contract_realization.labels,
+          datasets: [{
+            label: 'Amount (SAR)',
+            data: p.chart_contract_realization.values,
+            backgroundColor: ['#10B981', '#F59E0B', '#C53030'],
+            borderRadius: 6,
+            maxBarThickness: 56
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#64748B', font: { family: 'Inter', size: 11 } }, grid: { display: false } },
+            y: { 
+              beginAtZero: true, 
+              ticks: { 
+                color: '#64748B', 
+                font: { family: 'Inter', size: 11 },
+                callback: function(v) { return formatSar(v); }
+              }, 
+              grid: { color: '#EDF2F7' } 
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' Amount: ' + formatSar(ctx.raw) + ' SAR';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  function getPoStatusBadge(status) {
+    status = status || 'In Progress';
+    let cls = 'badge-blue';
+    if (status === 'Completed') cls = 'badge-green';
+    else if (status === 'On Hold') cls = 'badge-amber';
+    else if (status === 'Cancelled') cls = 'badge-red';
+    return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
   }
 
   async function loadProjects() {
@@ -750,6 +1237,8 @@ $user = Auth::requireLogin(['pm', 'executive']);
       if (json.success) {
         closeModal();
         await loadProjects();
+        const activeProj = document.getElementById('dashProjectSelect')?.value || '';
+        await loadDashboardMetrics(activeProj);
       } else {
         alert('Error: ' + (json.error || json.message));
       }
@@ -793,7 +1282,10 @@ $user = Auth::requireLogin(['pm', 'executive']);
     document.body.removeChild(link);
   }
 
-  document.addEventListener('DOMContentLoaded', loadProjects);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadProjects();
+    loadDashboardMetrics();
+  });
 </script>
 </body>
 </html>

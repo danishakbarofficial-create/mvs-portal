@@ -12,6 +12,7 @@ $user = Auth::requireLogin(['sales', 'executive']);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/portal.css?v=<?= time() ?>">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -49,13 +50,22 @@ $user = Auth::requireLogin(['sales', 'executive']);
       <?php endif; ?>
 
       <div class="nav-section-label"><?= ($user['role'] === 'sales') ? 'Commercial Workspace' : 'Sales Pipeline' ?></div>
-      <a href="sales_portal.php" class="nav-item active">
+      <a href="javascript:void(0)" onclick="switchTab('sales-dash')" class="nav-item active" id="nav-item-sales-dash">
+        <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
+          <line x1="12" y1="20" x2="12" y2="10"></line>
+          <line x1="18" y1="20" x2="18" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="16"></line>
+        </svg>
+        <span class="nav-item-text">Pipeline Dashboard</span>
+      </a>
+
+      <a href="javascript:void(0)" onclick="switchTab('sales-register')" class="nav-item" id="nav-item-sales-register">
         <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="3" y1="9" x2="21" y2="9"></line>
           <line x1="9" y1="21" x2="9" y2="9"></line>
         </svg>
-        <span class="nav-item-text"><?= ($user['role'] === 'sales') ? 'My Sales Pipeline' : 'Pipeline' ?></span>
+        <span class="nav-item-text"><?= ($user['role'] === 'sales') ? 'My Sales Pipeline' : 'Pipeline Register' ?></span>
       </a>
 
       <?php if ($user['role'] === 'executive' || $user['role'] === 'admin'): ?>
@@ -139,103 +149,192 @@ $user = Auth::requireLogin(['sales', 'executive']);
 
     <!-- Main Content Canvas -->
     <main class="portal-main">
-      <div class="page-header-row">
-        <div class="page-header-title-box">
-          <h1>Pipeline</h1>
-          <p>Real-time register of pre-award inquiries, client tenders, quotations, and expected closings.</p>
-        </div>
-        <div class="page-header-actions">
-          <button class="btn btn-secondary" onclick="exportCsv()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Export CSV</span>
-          </button>
-          <button class="btn btn-primary" onclick="openCreateModal()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>New Inquiry / Bid</span>
-          </button>
-        </div>
+      <div class="exec-nav-tabs">
+        <button class="exec-tab-btn active" id="btn-tab-sales-dash" onclick="switchTab('sales-dash')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="20" x2="12" y2="10"></line>
+            <line x1="18" y1="20" x2="18" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="16"></line>
+          </svg>
+          <span>Pipeline Dashboard</span>
+        </button>
+        <button class="exec-tab-btn" id="btn-tab-sales-register" onclick="switchTab('sales-register')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          <span>Pipeline Register</span>
+        </button>
       </div>
 
-      <!-- Top KPI Row -->
-      <div class="kpi-grid">
-        <div class="kpi-card highlight-blue">
-          <div class="kpi-label">My Active Pipeline</div>
-          <div class="kpi-val" id="myPipelineVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Total value of all active bids</div>
-        </div>
-        <div class="kpi-card highlight-won">
-          <div class="kpi-label">Won Bids (SAR)</div>
-          <div class="kpi-val" id="myWonVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Successfully closed contracts</div>
-        </div>
-        <div class="kpi-card highlight-review">
-          <div class="kpi-label">Under Pricing / Review</div>
-          <div class="kpi-val" id="myPricingVal">0 <span class="curr">SAR</span></div>
-          <div class="kpi-sub">Inquiries in technical preparation</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Total Inquiries</div>
-          <div class="kpi-val" id="myTotalCount">0</div>
-          <div class="kpi-sub">Assigned opportunities</div>
-        </div>
-      </div>
-
-      <!-- Filter & Action Bar -->
-      <div class="action-bar">
-        <div class="action-left">
-          <div class="search-box">
-            <svg class="search-box-icon" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search project, client, quotation..." onkeyup="filterPipeline()">
+      <!-- ===================================================================
+           TAB 1: Commercial & Sales Pipeline Dashboard (Scoped to Sales Rep)
+           =================================================================== -->
+      <div class="tab-content active" id="tab-sales-dash">
+        <div class="action-bar" style="margin-bottom: 20px;">
+          <div class="action-left">
+            <span style="font-size:0.85rem;font-weight:600;color:var(--color-text-secondary);">
+              My Sales Performance &amp; Active Bids
+            </span>
           </div>
-          <select id="statusFilter" onchange="filterPipeline()">
-            <option value="">All Decision Statuses</option>
-            <option value="Information Gathering">Information Gathering</option>
-            <option value="Under Review">Under Review</option>
-            <option value="Pricing in Progress">Pricing in Progress</option>
-            <option value="Quotation Submitted">Quotation Submitted</option>
-            <option value="Won">Won</option>
-            <option value="Lost">Lost</option>
-            <option value="On Hold">On Hold</option>
-          </select>
+          <div class="action-right">
+            <button class="btn btn-primary" onclick="openCreateModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>+ New Inquiry / Bid</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Top KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card highlight-blue">
+            <div class="kpi-label">Total Active Pipeline</div>
+            <div class="kpi-val" id="dashTotalPipeline">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Total value of all active inquiries</div>
+          </div>
+          <div class="kpi-card highlight-won">
+            <div class="kpi-label">Won Projects Value</div>
+            <div class="kpi-val" id="dashWonVal">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Successfully approved contracts</div>
+          </div>
+          <div class="kpi-card highlight-review">
+            <div class="kpi-label">Under Pricing / Review</div>
+            <div class="kpi-val" id="dashUnderPricingVal">0 <span class="curr">SAR</span></div>
+            <div class="kpi-sub">Bids in active commercial prep</div>
+          </div>
+          <div class="kpi-card highlight-green">
+            <div class="kpi-label">Win Rate (% Decided)</div>
+            <div class="kpi-val" id="dashWinRate">0%</div>
+            <div class="kpi-sub">Ratio of won vs lost bids</div>
+          </div>
+        </div>
+
+        <!-- 2 Visual Charts -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>My Inquiries by Pipeline Status</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>Pipeline Value by Stage (SAR)</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="stageValChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table 1: Pipeline Bids by Status -->
+        <div class="dash-section-header">
+          <h3>
+            <span>Pipeline Bids by Status</span>
+          </h3>
+        </div>
+        <div class="table-container" style="margin-bottom: 24px;">
+          <table class="v4-table" id="tableSalesStatus">
+            <thead>
+              <tr>
+                <th>Pipeline Status</th>
+                <th style="text-align:center;">Bid Count</th>
+                <th style="text-align:right;">Value (SAR)</th>
+                <th style="width:200px;">% of Total</th>
+                <th>Expected Closing Range</th>
+              </tr>
+            </thead>
+            <tbody id="salesStatusBody">
+              <tr><td colspan="5" class="loading-td">Loading status breakdown...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- v4 Pipeline Data Table -->
-      <div class="table-container">
-        <table class="v4-table" id="pipelineTable">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Sales Person</th>
-              <th>Project Name</th>
-              <th>Client</th>
-              <th>Scope of Work</th>
-              <th>Quotation No.</th>
-              <th style="text-align:right;">Total SAR (incl. VAT)</th>
-              <th>Decision Status</th>
-              <th>Missing Info</th>
-              <th>Submission Date</th>
-              <th>Expected Closing</th>
-              <th>Next Step</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="pipelineTableBody">
-            <tr>
-              <td colspan="13" class="loading-td">Loading pipeline records...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- ===================================================================
+           TAB 2: My Opportunities & Bids Register
+           =================================================================== -->
+      <div class="tab-content" id="tab-sales-register">
+        <div class="page-header-row">
+          <div class="page-header-title-box">
+            <h1><?= ($user['role'] === 'sales') ? 'My Sales Pipeline' : 'Pipeline Register' ?></h1>
+            <p>Real-time register of pre-award inquiries, client tenders, quotations, and expected closings.</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="exportCsv()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>New Inquiry / Bid</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Action Bar -->
+        <div class="action-bar">
+          <div class="action-left">
+            <div class="search-box">
+              <svg class="search-box-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Search project, client, quotation..." onkeyup="filterPipeline()">
+            </div>
+            <select id="statusFilter" onchange="filterPipeline()">
+              <option value="">All Decision Statuses</option>
+              <option value="Information Gathering">Information Gathering</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Pricing in Progress">Pricing in Progress</option>
+              <option value="Quotation Submitted">Quotation Submitted</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- v4 Pipeline Data Table -->
+        <div class="table-container">
+          <table class="v4-table" id="pipelineTable">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Sales Person</th>
+                <th>Project Name</th>
+                <th>Client</th>
+                <th>Scope of Work</th>
+                <th>Quotation No.</th>
+                <th style="text-align:right;">Total SAR (incl. VAT)</th>
+                <th>Decision Status</th>
+                <th>Missing Info</th>
+                <th>Submission Date</th>
+                <th>Expected Closing</th>
+                <th>Next Step</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pipelineTableBody">
+              <tr>
+                <td colspan="13" class="loading-td">Loading pipeline records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>
@@ -457,6 +556,184 @@ $user = Auth::requireLogin(['sales', 'executive']);
 
 <script>
   let allRecords = [];
+  let statusChartInstance = null;
+  let stageValChartInstance = null;
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.exec-tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.sidebar .nav-item').forEach(el => el.classList.remove('active'));
+
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) targetTab.classList.add('active');
+
+    const btn = document.getElementById('btn-tab-' + tabId);
+    if (btn) btn.classList.add('active');
+
+    const navItem = document.getElementById('nav-item-' + tabId);
+    if (navItem) navItem.classList.add('active');
+  }
+
+  async function loadDashboardMetrics() {
+    try {
+      const res = await fetch('api/v4_dashboard.php');
+      const json = await res.json();
+      if (json.success && json.sales_dashboard) {
+        renderSalesDashboard(json.sales_dashboard);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard metrics:', err);
+    }
+  }
+
+  function renderSalesDashboard(s) {
+    const totalPipe = document.getElementById('dashTotalPipeline');
+    if (totalPipe) totalPipe.innerHTML = formatSar(s.total_pipeline) + ' <span class="curr">SAR</span>';
+
+    const wonVal = document.getElementById('dashWonVal');
+    if (wonVal) wonVal.innerHTML = formatSar(s.won_value ?? s.won_val ?? 0) + ' <span class="curr">SAR</span>';
+
+    const underPricingVal = document.getElementById('dashUnderPricingVal');
+    if (underPricingVal) underPricingVal.innerHTML = formatSar(s.under_pricing_value ?? s.under_pricing_val ?? 0) + ' <span class="curr">SAR</span>';
+
+    const winRate = document.getElementById('dashWinRate');
+    if (winRate) winRate.innerText = (s.win_rate_pct ?? s.win_rate ?? 0) + '%';
+
+    // Populate Status breakdown table
+    const tbody = document.getElementById('salesStatusBody');
+    if (tbody && s.by_status_table) {
+      tbody.innerHTML = s.by_status_table.map(row => {
+        const badge = getStatusBadge(row.status);
+        const sarVal = Number(row.total_val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        const pct = row.pct_of_total || 0;
+        return `
+          <tr>
+            <td>${badge}</td>
+            <td style="text-align:center;font-weight:700;">${row.count}</td>
+            <td class="sar-cell">${sarVal}</td>
+            <td>
+              <div class="pct-bar-cell">
+                <span class="pct-val-text">${pct}%</span>
+                <div class="pct-bar-bg">
+                  <div class="pct-bar-fill" style="width: ${Math.min(100, pct)}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td>${escapeHtml(row.expected_closing || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Chart 1: Doughnut (Inquiries by Status)
+    if (s.by_status && document.getElementById('statusChart')) {
+      const ctx = document.getElementById('statusChart').getContext('2d');
+      if (statusChartInstance) statusChartInstance.destroy();
+
+      const labels = s.by_status.map(x => x.status);
+      const dataCounts = s.by_status.map(x => x.count);
+      const bgColors = [
+        '#0284C7', // Info Gathering
+        '#8B5CF6', // Under Review
+        '#F59E0B', // Pricing in Progress
+        '#3B82F6', // Quotation Submitted
+        '#10B981', // Won
+        '#EF4444', // Lost
+        '#64748B'  // On Hold
+      ];
+
+      statusChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataCounts,
+            backgroundColor: bgColors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                font: { family: 'Inter', size: 11, weight: '500' },
+                color: '#475569',
+                padding: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' ' + ctx.label + ': ' + ctx.raw + ' bids';
+                }
+              }
+            }
+          },
+          cutout: '68%'
+        }
+      });
+    }
+
+    // Chart 2: Bar (Value by Stage in SAR)
+    if (s.by_status && document.getElementById('stageValChart')) {
+      const ctx = document.getElementById('stageValChart').getContext('2d');
+      if (stageValChartInstance) stageValChartInstance.destroy();
+
+      const labels = s.by_status.map(x => x.status);
+      const dataVals = s.by_status.map(x => x.total_val);
+
+      stageValChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pipeline Value (SAR)',
+            data: dataVals,
+            backgroundColor: '#0EA5E9',
+            borderRadius: 6,
+            maxBarThickness: 40
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              ticks: {
+                color: '#64748B',
+                font: { family: 'Inter', size: 10 }
+              },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#64748B',
+                font: { family: 'Inter', size: 11 },
+                callback: function(v) { return formatSar(v); }
+              },
+              grid: { color: '#EDF2F7' }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ' Value: ' + formatSar(ctx.raw) + ' SAR';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
 
   function toggleSidebar() {
     const sb = document.getElementById('appSidebar');
@@ -498,10 +775,14 @@ $user = Auth::requireLogin(['sales', 'executive']);
       }
     });
 
-    document.getElementById('myPipelineVal').innerHTML = formatSar(totalPipeline) + ' <span class="curr">SAR</span>';
-    document.getElementById('myWonVal').innerHTML = formatSar(wonVal) + ' <span class="curr">SAR</span>';
-    document.getElementById('myPricingVal').innerHTML = formatSar(pricingVal) + ' <span class="curr">SAR</span>';
-    document.getElementById('myTotalCount').innerText = records.length;
+    const p = document.getElementById('myPipelineVal');
+    if (p) p.innerHTML = formatSar(totalPipeline) + ' <span class="curr">SAR</span>';
+    const w = document.getElementById('myWonVal');
+    if (w) w.innerHTML = formatSar(wonVal) + ' <span class="curr">SAR</span>';
+    const pr = document.getElementById('myPricingVal');
+    if (pr) pr.innerHTML = formatSar(pricingVal) + ' <span class="curr">SAR</span>';
+    const c = document.getElementById('myTotalCount');
+    if (c) c.innerText = records.length;
   }
 
   function formatSar(num) {
@@ -748,6 +1029,7 @@ $user = Auth::requireLogin(['sales', 'executive']);
       if (json.success) {
         closeModal();
         await loadPipeline();
+        await loadDashboardMetrics();
       } else {
         alert('Error: ' + (json.error || json.message));
       }
@@ -788,7 +1070,10 @@ $user = Auth::requireLogin(['sales', 'executive']);
     document.body.removeChild(link);
   }
 
-  document.addEventListener('DOMContentLoaded', loadPipeline);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadPipeline();
+    loadDashboardMetrics();
+  });
 </script>
 </body>
 </html>
