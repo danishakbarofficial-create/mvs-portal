@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In &bull; MVS Project Pulse</title>
+  <title>Sign In &bull; MVS ICT &amp; Telecom</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -547,13 +547,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <h1 class="hero-title">
-          MVS <span>Project Pulse</span>
+          MVS <span>ICT &amp; Telecom</span>
         </h1>
         <p class="hero-subtitle">
-          Next-generation commercial bid intelligence and post-award project execution governance for Telecom &amp; ICT infrastructure.
+          Executive overview of sales pipeline, awarded PO contracts, milestone deliveries, invoicing, and cash collections.
         </p>
 
-        <!-- 3 Feature Pillars -->
+        <!-- 3 Feature Pillars (Exact Excel Dashboard Scope) -->
         <div class="hero-features">
           <div class="feature-item">
             <div class="feature-icon-box feature-icon-blue">
@@ -563,8 +563,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </svg>
             </div>
             <div class="feature-text-box">
-              <h4>Commercial Pipeline &amp; Tenders</h4>
-              <p>Active inquiry tracking, RFQ quotation status, expected closing schedules and sales conversion metrics.</p>
+              <h4>Sales &amp; Pipeline Dashboard</h4>
+              <p>Overview of pre-award sales pipeline, bid submissions, win rates, and expected closings.</p>
             </div>
           </div>
 
@@ -577,8 +577,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </svg>
             </div>
             <div class="feature-text-box">
-              <h4>Operational Project Milestones</h4>
-              <p>Post-award deliverable milestones, project manager accountability and real-time execution governance.</p>
+              <h4>Projects, Invoicing &amp; Financial Health</h4>
+              <p>Operations &amp; cash collection dashboard tracking awarded PO contracts, milestone billings, and cash flow.</p>
             </div>
           </div>
 
@@ -591,8 +591,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </svg>
             </div>
             <div class="feature-text-box">
-              <h4>Billing &amp; Cash Realization</h4>
-              <p>Contract PO invoicing realization, client cash collections and unbilled backlog management.</p>
+              <h4>Pipeline &amp; Milestone Registers</h4>
+              <p>Real-time registers tracking active client inquiries, tenders, milestone deliverables, and payments.</p>
             </div>
           </div>
         </div>
@@ -611,7 +611,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <span>Role-Scoped RBAC Governance</span>
         </div>
         <div>
-          <span>v4.2 Enterprise Release</span>
+          <span>Enterprise Release &bull; v4</span>
         </div>
       </div>
     </div>
