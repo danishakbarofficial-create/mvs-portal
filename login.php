@@ -310,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <input type="password" name="password" id="password" class="form-input" placeholder="••••••••" value="mvs123" required>
+          <input type="password" name="password" id="password" class="form-input" placeholder="••••••••" required>
         </div>
 
         <button type="submit" class="btn-submit">
@@ -321,37 +321,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </svg>
         </button>
       </form>
-
-      <div class="demo-accounts-box">
-        <div class="demo-accounts-title">Quick Evaluation Access</div>
-        <div class="quick-login-grid">
-          <button type="button" class="role-btn" onclick="quickFill('executive', 'mvs123')">
-            Executive
-            <span>Leadership</span>
-          </button>
-          <button type="button" class="role-btn" onclick="quickFill('asayil', 'mvs123')">
-            Sales
-            <span>Commercial</span>
-          </button>
-          <button type="button" class="role-btn" onclick="quickFill('farooq', 'mvs123')">
-            Operations
-            <span>Project PM</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <div class="auth-footer">
-      Modern Vision Solutions Ltd &bull; Default access password: <code>mvs123</code>
+      Modern Vision Solutions Ltd &bull; Enterprise Secure Workspace
     </div>
   </div>
-
-  <script>
-    function quickFill(user, pw) {
-      document.getElementById('username').value = user;
-      document.getElementById('password').value = pw;
-      document.getElementById('loginForm').submit();
-    }
-  </script>
 </body>
 </html>
