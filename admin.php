@@ -256,6 +256,15 @@ $user = Auth::requireLogin(['admin']);
 
       <div class="nav-section-label">System Portals</div>
 
+      <a href="api/export master excel.php" class="nav-item" style="color: #107C41;">
+        <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span class="nav-item-text" style="font-weight: 600;">Download Master Excel</span>
+      </a>
+
       <a href="executive_portal.php?tab=sales-dash" class="nav-item">
         <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
           <line x1="12" y1="20" x2="12" y2="10"></line>
@@ -351,7 +360,15 @@ $user = Auth::requireLogin(['admin']);
           <h1 class="page-title">Enterprise User Management</h1>
           <p class="page-subtitle">Configure system users, assign role-based access permissions, and maintain institutional security.</p>
         </div>
-        <div class="page-header-actions">
+        <div class="page-header-actions" style="display:flex;gap:10px;align-items:center;">
+          <a href="api/export master excel.php" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; padding: 9px 16px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 0.85rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download Master Excel</span>
+          </a>
           <button class="btn btn-primary" onclick="openCreateUserModal()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
