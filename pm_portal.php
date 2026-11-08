@@ -363,7 +363,15 @@ $user = Auth::requireLogin(['pm', 'executive']);
             <h1><?= ($user['role'] === 'pm') ? 'My Projects &amp; Milestones' : 'Projects Register' ?></h1>
             <p>Post-award operational delivery tracking, milestone deliverables, invoicing, and cash collections.</p>
           </div>
-          <div class="page-header-actions">
+          <div class="page-header-actions" style="display:flex;gap:8px;align-items:center;">
+            <a href="api/export master excel.php?type=projects" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download Projects Excel</span>
+            </a>
             <button class="btn btn-secondary" onclick="exportCsv()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

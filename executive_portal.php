@@ -204,14 +204,25 @@ $user = Auth::requireLogin(['executive']);
           <h1>Executive Command Center</h1>
           <p>Institutional oversight of commercial pipeline, project deliverables, and cash collections.</p>
         </div>
-        <div class="page-header-actions">
-          <a href="api/export master excel.php" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; padding: 9px 16px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 0.85rem;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="page-header-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <a href="api/export master excel.php?type=pipelines" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 0.83rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span>Download Master Excel</span>
+            <span>Pipelines Excel</span>
+          </a>
+          <a href="api/export master excel.php?type=projects" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; padding: 8px 14px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 0.83rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Projects Excel</span>
+          </a>
+          <a href="api/export master excel.php" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 0.83rem;" title="Download complete master workbook with both Pipelines & Projects">
+            <span>Combined Master</span>
           </a>
         </div>
       </div>
@@ -562,13 +573,13 @@ $user = Auth::requireLogin(['executive']);
             </select>
           </div>
           <div class="action-right" style="display:flex;gap:8px;align-items:center;">
-            <a href="api/export master excel.php" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; font-size: 0.82rem; padding: 7px 12px; border-radius: 6px;">
+            <a href="api/export master excel.php?type=pipelines" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; font-size: 0.82rem; padding: 7px 12px; border-radius: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Download Master Excel</span>
+              <span>Download Pipelines Excel</span>
             </a>
             <button class="btn btn-secondary" onclick="exportMasterPipelineCsv()">Export CSV</button>
           </div>
@@ -619,13 +630,13 @@ $user = Auth::requireLogin(['executive']);
             </select>
           </div>
           <div class="action-right" style="display:flex;gap:8px;align-items:center;">
-            <a href="api/export master excel.php" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; font-size: 0.82rem; padding: 7px 12px; border-radius: 6px;">
+            <a href="api/export master excel.php?type=projects" class="btn" style="background-color: #107C41; color: #ffffff; border: 1px solid #0b5e31; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; font-size: 0.82rem; padding: 7px 12px; border-radius: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Download Master Excel</span>
+              <span>Download Projects Excel</span>
             </a>
             <button class="btn btn-secondary" onclick="exportMasterProjectsCsv()">Export CSV</button>
           </div>

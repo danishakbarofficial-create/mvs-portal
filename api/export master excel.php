@@ -1,14 +1,25 @@
 <?php
 /**
  * MVS ICT & Telecom - Live Master Excel Export Engine
- * Exports the live system records into the exact original v4 Excel layout
- * preserving all sheets, dashboards, styling, borders, and formulas.
+ * Exports live system records into the exact original v4 Excel layout
+ * Supports:
+ *   ?type=pipelines -> MVS PipeLines Tracking.xlsx (Sales Dashboard, Pipeline, Lists)
+ *   ?type=projects  -> MVS Projects Tracking.xlsx (Projects Dashboard, Projects, Lists)
+ *   (default/all)   -> MVS Master Project Tracking.xlsx (All 5 sheets combined)
  */
 
 require_once __DIR__ . '/../auth.php';
 
-// Authorized roles
-$currentUser = Auth::requireLogin(['admin', 'executive']);
+$targetType = isset($_GET['type']) ? strtolower(trim($_GET['type'])) : 'all';
+
+// Role-based access governance
+if ($targetType === 'pipelines') {
+    $currentUser = Auth::requireLogin(['admin', 'executive', 'sales']);
+} elseif ($targetType === 'projects') {
+    $currentUser = Auth::requireLogin(['admin', 'executive', 'pm']);
+} else {
+    $currentUser = Auth::requireLogin(['admin', 'executive']);
+}
 
 $dbPath = __DIR__ . '/../data/mvs_sales.sqlite';
 $templatePath = __DIR__ . '/../Project_Tracking_Report Asayil v4.xlsx';
@@ -46,7 +57,6 @@ function toExcelSerialDate($str) {
 
 // Helper to write OpenXML cell contents safely preserving formatting & existing formulas
 function setCellContent(DOMDocument $doc, string $ns, DOMElement $c, $val, string $type = 'text') {
-    // Preserve formula <f> if present
     $hasFormula = false;
     foreach ($c->childNodes as $child) {
         if ($child->localName === 'f') {
@@ -56,7 +66,6 @@ function setCellContent(DOMDocument $doc, string $ns, DOMElement $c, $val, strin
     }
 
     if ($hasFormula) {
-        // Only strip cached <v> so Excel calculates freshly
         $toRemove = [];
         foreach ($c->childNodes as $child) {
             if ($child->localName === 'v' || $child->localName === 'is') {
@@ -69,7 +78,6 @@ function setCellContent(DOMDocument $doc, string $ns, DOMElement $c, $val, strin
         return;
     }
 
-    // For non-formula cells, clear old contents
     while ($c->hasChildNodes()) {
         $c->removeChild($c->firstChild);
     }
@@ -99,7 +107,6 @@ function setCellContent(DOMDocument $doc, string $ns, DOMElement $c, $val, strin
             $v->textContent = (string)$serial;
             $c->appendChild($v);
         } else {
-            // Fallback as clean string
             $c->setAttribute('t', 'inlineStr');
             $is = $doc->createElementNS($ns, 'is');
             $t = $doc->createElementNS($ns, 't');
@@ -127,157 +134,169 @@ if ($zip->open($tempExportFile) !== TRUE) {
 $NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 // -------------------------------------------------------------
-// 1. Process Pipeline (sheet3.xml)
+// 1. Process Pipeline (sheet3.xml) if needed
 // -------------------------------------------------------------
-$sheet3Xml = $zip->getFromName('xl/worksheets/sheet3.xml');
-if ($sheet3Xml !== false) {
-    $doc3 = new DOMDocument();
-    $doc3->loadXML($sheet3Xml);
-    $xpath3 = new DOMXPath($doc3);
-    $xpath3->registerNamespace('x', $NS);
+if ($targetType === 'pipelines' || $targetType === 'all') {
+    $sheet3Xml = $zip->getFromName('xl/worksheets/sheet3.xml');
+    if ($sheet3Xml !== false) {
+        $doc3 = new DOMDocument();
+        $doc3->loadXML($sheet3Xml);
+        $xpath3 = new DOMXPath($doc3);
+        $xpath3->registerNamespace('x', $NS);
 
-    $pipelineColMap = [
-        'B' => ['field' => 'sales_person', 'type' => 'text'],
-        'C' => ['field' => 'project_name', 'type' => 'text'],
-        'D' => ['field' => 'client', 'type' => 'text'],
-        'E' => ['field' => 'main_contractor', 'type' => 'text'],
-        'F' => ['field' => 'consultant', 'type' => 'text'],
-        'G' => ['field' => 'scope_of_work', 'type' => 'text'],
-        'H' => ['field' => 'date_received', 'type' => 'date'],
-        'I' => ['field' => 'submission_date', 'type' => 'date'],
-        'J' => ['field' => 'quotation_no', 'type' => 'text'],
-        'K' => ['field' => 'quotation_status', 'type' => 'text'],
-        'L' => ['field' => 'total_sar', 'type' => 'number'],
-        'M' => ['field' => 'expected_closing', 'type' => 'date'],
-        'N' => ['field' => 'quotation_valid_until', 'type' => 'date'],
-        'O' => ['field' => 'contact_person', 'type' => 'text'],
-        'P' => ['field' => 'contact_details', 'type' => 'text'],
-        'Q' => ['field' => 'decision_status', 'type' => 'text'],
-        'R' => ['field' => 'missing_info', 'type' => 'text'],
-        'S' => ['field' => 'next_step', 'type' => 'text'],
-        'T' => ['field' => 'follow_up_date', 'type' => 'date'],
-        'U' => ['field' => 'notes', 'type' => 'text'],
-        'V' => ['field' => 'additional_notes', 'type' => 'text']
-    ];
+        $pipelineColMap = [
+            'B' => ['field' => 'sales_person', 'type' => 'text'],
+            'C' => ['field' => 'project_name', 'type' => 'text'],
+            'D' => ['field' => 'client', 'type' => 'text'],
+            'E' => ['field' => 'main_contractor', 'type' => 'text'],
+            'F' => ['field' => 'consultant', 'type' => 'text'],
+            'G' => ['field' => 'scope_of_work', 'type' => 'text'],
+            'H' => ['field' => 'date_received', 'type' => 'date'],
+            'I' => ['field' => 'submission_date', 'type' => 'date'],
+            'J' => ['field' => 'quotation_no', 'type' => 'text'],
+            'K' => ['field' => 'quotation_status', 'type' => 'text'],
+            'L' => ['field' => 'total_sar', 'type' => 'number'],
+            'M' => ['field' => 'expected_closing', 'type' => 'date'],
+            'N' => ['field' => 'quotation_valid_until', 'type' => 'date'],
+            'O' => ['field' => 'contact_person', 'type' => 'text'],
+            'P' => ['field' => 'contact_details', 'type' => 'text'],
+            'Q' => ['field' => 'decision_status', 'type' => 'text'],
+            'R' => ['field' => 'missing_info', 'type' => 'text'],
+            'S' => ['field' => 'next_step', 'type' => 'text'],
+            'T' => ['field' => 'follow_up_date', 'type' => 'date'],
+            'U' => ['field' => 'notes', 'type' => 'text'],
+            'V' => ['field' => 'additional_notes', 'type' => 'text']
+        ];
 
-    for ($r = 5; $r <= 104; $r++) {
-        $idx = $r - 5;
-        $record = isset($pipelineRows[$idx]) ? $pipelineRows[$idx] : null;
+        for ($r = 5; $r <= 104; $r++) {
+            $idx = $r - 5;
+            $record = isset($pipelineRows[$idx]) ? $pipelineRows[$idx] : null;
 
-        // Column A: Row sequence number
-        $nodesA = $xpath3->query("//x:row[@r='$r']/x:c[@r='A$r']");
-        if ($nodesA->length > 0) {
-            $cA = $nodesA->item(0);
-            if ($record) {
-                setCellContent($doc3, $NS, $cA, $idx + 1, 'number');
-            } else {
-                setCellContent($doc3, $NS, $cA, '', 'text');
+            $nodesA = $xpath3->query("//x:row[@r='$r']/x:c[@r='A$r']");
+            if ($nodesA->length > 0) {
+                $cA = $nodesA->item(0);
+                setCellContent($doc3, $NS, $cA, $record ? ($idx + 1) : '', $record ? 'number' : 'text');
+            }
+
+            foreach ($pipelineColMap as $col => $info) {
+                $cellRef = $col . $r;
+                $nodes = $xpath3->query("//x:row[@r='$r']/x:c[@r='$cellRef']");
+                if ($nodes->length > 0) {
+                    $c = $nodes->item(0);
+                    $val = $record ? ($record[$info['field']] ?? '') : '';
+                    setCellContent($doc3, $NS, $c, $val, $info['type']);
+                }
             }
         }
-
-        // Columns B through V
-        foreach ($pipelineColMap as $col => $info) {
-            $cellRef = $col . $r;
-            $nodes = $xpath3->query("//x:row[@r='$r']/x:c[@r='$cellRef']");
-            if ($nodes->length > 0) {
-                $c = $nodes->item(0);
-                $val = $record ? ($record[$info['field']] ?? '') : '';
-                setCellContent($doc3, $NS, $c, $val, $info['type']);
-            }
-        }
+        $zip->addFromString('xl/worksheets/sheet3.xml', $doc3->saveXML());
     }
-    $zip->addFromString('xl/worksheets/sheet3.xml', $doc3->saveXML());
 }
 
 // -------------------------------------------------------------
-// 2. Process Awarded Projects & Milestones (sheet4.xml)
+// 2. Process Awarded Projects & Milestones (sheet4.xml) if needed
 // -------------------------------------------------------------
-$sheet4Xml = $zip->getFromName('xl/worksheets/sheet4.xml');
-if ($sheet4Xml !== false) {
-    $doc4 = new DOMDocument();
-    $doc4->loadXML($sheet4Xml);
-    $xpath4 = new DOMXPath($doc4);
-    $xpath4->registerNamespace('x', $NS);
+if ($targetType === 'projects' || $targetType === 'all') {
+    $sheet4Xml = $zip->getFromName('xl/worksheets/sheet4.xml');
+    if ($sheet4Xml !== false) {
+        $doc4 = new DOMDocument();
+        $doc4->loadXML($sheet4Xml);
+        $xpath4 = new DOMXPath($doc4);
+        $xpath4->registerNamespace('x', $NS);
 
-    $projectColMap = [
-        'B' => ['field' => 'project_manager', 'type' => 'text'],
-        'C' => ['field' => 'project_name', 'type' => 'text'],
-        'D' => ['field' => 'customer', 'type' => 'text'],
-        'E' => ['field' => 'po_status', 'type' => 'text'],
-        'F' => ['field' => 'po_no', 'type' => 'text'],
-        'G' => ['field' => 'po_date', 'type' => 'date'],
-        'H' => ['field' => 'total_po_value', 'type' => 'number'],
-        'I' => ['field' => 'expected_closing', 'type' => 'date'],
-        // J is formula Months to close
-        'K' => ['field' => 'milestone_no', 'type' => 'text'],
-        'L' => ['field' => 'milestone_desc', 'type' => 'text'],
-        'M' => ['field' => 'milestone_value', 'type' => 'number'],
-        'N' => ['field' => 'milestone_status', 'type' => 'text'],
-        'O' => ['field' => 'technical_report', 'type' => 'text'],
-        // P is formula Invoice Status
-        'Q' => ['field' => 'invoice_no', 'type' => 'text'],
-        'R' => ['field' => 'invoice_date', 'type' => 'date'],
-        'S' => ['field' => 'invoice_amount', 'type' => 'number'],
-        'T' => ['field' => 'collection_date', 'type' => 'date'],
-        'U' => ['field' => 'collected_amount', 'type' => 'number'],
-        'V' => ['field' => 'collection_status', 'type' => 'text'],
-        // W is formula Pending Collection
-        // X is formula To Be Invoiced
-        'Y' => ['field' => 'notes', 'type' => 'text'],
-        'Z' => ['field' => 'additional_notes', 'type' => 'text']
-    ];
+        $projectColMap = [
+            'B' => ['field' => 'project_manager', 'type' => 'text'],
+            'C' => ['field' => 'project_name', 'type' => 'text'],
+            'D' => ['field' => 'customer', 'type' => 'text'],
+            'E' => ['field' => 'po_status', 'type' => 'text'],
+            'F' => ['field' => 'po_no', 'type' => 'text'],
+            'G' => ['field' => 'po_date', 'type' => 'date'],
+            'H' => ['field' => 'total_po_value', 'type' => 'number'],
+            'I' => ['field' => 'expected_closing', 'type' => 'date'],
+            'K' => ['field' => 'milestone_no', 'type' => 'text'],
+            'L' => ['field' => 'milestone_desc', 'type' => 'text'],
+            'M' => ['field' => 'milestone_value', 'type' => 'number'],
+            'N' => ['field' => 'milestone_status', 'type' => 'text'],
+            'O' => ['field' => 'technical_report', 'type' => 'text'],
+            'Q' => ['field' => 'invoice_no', 'type' => 'text'],
+            'R' => ['field' => 'invoice_date', 'type' => 'date'],
+            'S' => ['field' => 'invoice_amount', 'type' => 'number'],
+            'T' => ['field' => 'collection_date', 'type' => 'date'],
+            'U' => ['field' => 'collected_amount', 'type' => 'number'],
+            'V' => ['field' => 'collection_status', 'type' => 'text'],
+            'Y' => ['field' => 'notes', 'type' => 'text'],
+            'Z' => ['field' => 'additional_notes', 'type' => 'text']
+        ];
 
-    for ($r = 5; $r <= 104; $r++) {
-        $idx = $r - 5;
-        $record = isset($projectsRows[$idx]) ? $projectsRows[$idx] : null;
+        for ($r = 5; $r <= 104; $r++) {
+            $idx = $r - 5;
+            $record = isset($projectsRows[$idx]) ? $projectsRows[$idx] : null;
 
-        // Column A: Row sequence number
-        $nodesA = $xpath4->query("//x:row[@r='$r']/x:c[@r='A$r']");
-        if ($nodesA->length > 0) {
-            $cA = $nodesA->item(0);
-            if ($record) {
-                setCellContent($doc4, $NS, $cA, $idx + 1, 'number');
-            } else {
-                setCellContent($doc4, $NS, $cA, '', 'text');
+            $nodesA = $xpath4->query("//x:row[@r='$r']/x:c[@r='A$r']");
+            if ($nodesA->length > 0) {
+                $cA = $nodesA->item(0);
+                setCellContent($doc4, $NS, $cA, $record ? ($idx + 1) : '', $record ? 'number' : 'text');
+            }
+
+            foreach ($projectColMap as $col => $info) {
+                $cellRef = $col . $r;
+                $nodes = $xpath4->query("//x:row[@r='$r']/x:c[@r='$cellRef']");
+                if ($nodes->length > 0) {
+                    $c = $nodes->item(0);
+                    $val = $record ? ($record[$info['field']] ?? '') : '';
+                    setCellContent($doc4, $NS, $c, $val, $info['type']);
+                }
             }
         }
-
-        // Columns B through Z
-        foreach ($projectColMap as $col => $info) {
-            $cellRef = $col . $r;
-            $nodes = $xpath4->query("//x:row[@r='$r']/x:c[@r='$cellRef']");
-            if ($nodes->length > 0) {
-                $c = $nodes->item(0);
-                $val = $record ? ($record[$info['field']] ?? '') : '';
-                setCellContent($doc4, $NS, $c, $val, $info['type']);
-            }
-        }
+        $zip->addFromString('xl/worksheets/sheet4.xml', $doc4->saveXML());
     }
-    $zip->addFromString('xl/worksheets/sheet4.xml', $doc4->saveXML());
 }
 
 // -------------------------------------------------------------
-// 3. Update workbook calculation properties to force full recalc on open
+// 3. Update workbook calculation properties & filter sheets
 // -------------------------------------------------------------
 $wbXml = $zip->getFromName('xl/workbook.xml');
 if ($wbXml !== false) {
     $docWb = new DOMDocument();
     $docWb->loadXML($wbXml);
+
     $calcPrList = $docWb->getElementsByTagName('calcPr');
     if ($calcPrList->length > 0) {
         $calcPr = $calcPrList->item(0);
         $calcPr->setAttribute('fullCalcOnLoad', '1');
         $calcPr->setAttribute('forceFullCalc', '1');
     }
+
+    $sheetsParent = $docWb->getElementsByTagName('sheets')->item(0);
+    if ($sheetsParent) {
+        $sheetsToRemove = [];
+        if ($targetType === 'pipelines') {
+            $sheetsToRemove = ['Projects Dashboard', 'Projects'];
+        } elseif ($targetType === 'projects') {
+            $sheetsToRemove = ['Sales Dashboard', 'Pipeline'];
+        }
+
+        foreach (iterator_to_array($sheetsParent->childNodes) as $node) {
+            if ($node instanceof DOMElement && in_array($node->getAttribute('name'), $sheetsToRemove)) {
+                $sheetsParent->removeChild($node);
+            }
+        }
+    }
+
     $zip->addFromString('xl/workbook.xml', $docWb->saveXML());
 }
 
 $zip->close();
 
 // -------------------------------------------------------------
-// 4. Stream response with professional Excel headers
+// 4. Determine Download Filename
 // -------------------------------------------------------------
-$downloadFilename = "MVS Master Project Tracking.xlsx";
+if ($targetType === 'pipelines') {
+    $downloadFilename = "MVS PipeLines Tracking.xlsx";
+} elseif ($targetType === 'projects') {
+    $downloadFilename = "MVS Projects Tracking.xlsx";
+} else {
+    $downloadFilename = "MVS Master Project Tracking.xlsx";
+}
 
 header('Content-Description: File Transfer');
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -288,7 +307,6 @@ header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 header('Pragma: public');
 header('Content-Length: ' . filesize($tempExportFile));
 
-// Flush output buffers to prevent corruption
 while (ob_get_level()) {
     ob_end_clean();
 }
