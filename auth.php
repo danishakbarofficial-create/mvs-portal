@@ -17,6 +17,7 @@ class Auth {
             'username' => $_SESSION['username'],
             'name' => $_SESSION['name'],
             'email' => $_SESSION['email'] ?? '',
+            'phone' => $_SESSION['phone'] ?? '',
             'role' => $_SESSION['role']
         ];
     }
@@ -64,6 +65,7 @@ class Auth {
         $_SESSION['username'] = $user['username'];
         $_SESSION['name'] = $user['name'];
         $_SESSION['email'] = $user['email'];
+        $_SESSION['phone'] = $user['phone'] ?? '';
         $_SESSION['role'] = $user['role'];
 
         return [

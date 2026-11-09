@@ -101,7 +101,7 @@ $user = Auth::requireLogin(['sales', 'executive']);
     </nav>
 
     <div class="sidebar-footer">
-      <div class="user-mini-card">
+      <div class="user-mini-card" onclick="openMyProfileModal()" style="cursor: pointer;" title="View &amp; Edit Profile">
         <div class="user-mini-avatar"><?= strtoupper(substr($user['name'], 0, 1)) ?></div>
         <div class="user-mini-info">
           <span class="user-mini-name"><?= htmlspecialchars($user['name']) ?></span>
@@ -143,6 +143,13 @@ $user = Auth::requireLogin(['sales', 'executive']);
           <span>MVS ICT &amp; Telecom</span>
         </div>
         <span class="topbar-role-badge role-badge-sales"><?= ($user['role'] === 'executive') ? 'Executive View' : 'Sales Representative' ?></span>
+        <button class="btn btn-secondary" onclick="openMyProfileModal()" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          My Profile &amp; Settings
+        </button>
         <a href="logout.php" class="btn btn-logout" title="Sign Out">Sign Out</a>
       </div>
     </header>
@@ -1101,5 +1108,8 @@ $user = Auth::requireLogin(['sales', 'executive']);
     loadDashboardMetrics();
   });
 </script>
+
+<?php require_once __DIR__ . '/profile modal.php'; ?>
+
 </body>
 </html>
