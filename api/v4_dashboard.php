@@ -14,90 +14,138 @@ $pdo = Database::getConnection();
 // =========================================================================
 $salesMetrics = null;
 
+$v4Statuses = [
+    'Information Gathering',
+    'Under Review',
+    'Pricing in Progress',
+    'Quotation Submitted',
+    'Won',
+    'Lost',
+    'On Hold'
+];
+
 if ($user['role'] !== 'pm') {
     $salesMetrics = [];
     $isSales = ($user['role'] === 'sales');
-    $salesWhere = "";
-    $salesParams = [];
+
+    // Query filters from request
+    $selectedSalesPerson = trim($_GET['sales_person'] ?? '');
+    $selectedDecisionStatus = trim($_GET['decision_status'] ?? '');
+    $selectedClient = trim($_GET['client'] ?? '');
+
+    $baseFilters = [];
+    $baseParams = [];
 
     if ($isSales) {
-        $salesWhere = " WHERE LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-        $salesParams = [$user['name']];
+        $baseFilters[] = "LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
+        $baseParams[] = $user['name'];
+    } elseif ($selectedSalesPerson !== '' && $selectedSalesPerson !== 'All' && $selectedSalesPerson !== 'All Sales Reps') {
+        $baseFilters[] = "LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
+        $baseParams[] = $selectedSalesPerson;
+    }
+
+    if ($selectedClient !== '' && $selectedClient !== 'All' && $selectedClient !== 'All Clients') {
+        $baseFilters[] = "LOWER(TRIM(client)) = LOWER(TRIM(?))";
+        $baseParams[] = $selectedClient;
+    }
+
+    $statusFilter = "";
+    $statusFilterParams = [];
+    if ($selectedDecisionStatus !== '' && $selectedDecisionStatus !== 'All' && $selectedDecisionStatus !== 'All Statuses') {
+        if ($selectedDecisionStatus === 'Information Gathering') {
+            $statusFilter = "(decision_status = 'Information Gathering' OR decision_status IS NULL OR TRIM(decision_status) = '')";
+        } else {
+            $statusFilter = "LOWER(TRIM(decision_status)) = LOWER(TRIM(?))";
+            $statusFilterParams[] = $selectedDecisionStatus;
+        }
     }
 
     // Total Active Pipeline
-    $stmt = $pdo->prepare("SELECT SUM(total_sar) as total_pipeline FROM v4_pipeline" . $salesWhere);
-    $stmt->execute($salesParams);
+    $totalFilters = $baseFilters;
+    $totalParams = $baseParams;
+    if ($statusFilter !== '') {
+        $totalFilters[] = $statusFilter;
+        $totalParams = array_merge($totalParams, $statusFilterParams);
+    }
+    $totalWhere = !empty($totalFilters) ? " WHERE " . implode(" AND ", $totalFilters) : "";
+    $stmt = $pdo->prepare("SELECT SUM(total_sar) as total_pipeline FROM v4_pipeline" . $totalWhere);
+    $stmt->execute($totalParams);
     $totalPipeline = floatval($stmt->fetch()['total_pipeline'] ?? 0);
     $salesMetrics['total_pipeline'] = $totalPipeline;
 
     // Won Projects Value
-    $wonSql = "SELECT SUM(total_sar) as won_value FROM v4_pipeline WHERE (LOWER(decision_status) = 'won' OR LOWER(quotation_status) = 'approved')";
-    $wonParams = [];
-    if ($isSales) {
-        $wonSql .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-        $wonParams[] = $user['name'];
+    $wonFilters = $baseFilters;
+    $wonParams = $baseParams;
+    $wonFilters[] = "(LOWER(decision_status) = 'won' OR LOWER(quotation_status) = 'approved')";
+    if ($statusFilter !== '') {
+        $wonFilters[] = $statusFilter;
+        $wonParams = array_merge($wonParams, $statusFilterParams);
     }
-    $stmt = $pdo->prepare($wonSql);
+    $wonWhere = " WHERE " . implode(" AND ", $wonFilters);
+    $stmt = $pdo->prepare("SELECT SUM(total_sar) as won_value FROM v4_pipeline" . $wonWhere);
     $stmt->execute($wonParams);
     $wonVal = floatval($stmt->fetch()['won_value'] ?? 0);
     $salesMetrics['won_value'] = $wonVal;
 
     // Under Pricing / Review Value
-    $prSql = "SELECT SUM(total_sar) as pricing_value FROM v4_pipeline WHERE LOWER(decision_status) IN ('pricing in progress', 'under review', 'information gathering')";
-    $prParams = [];
-    if ($isSales) {
-        $prSql .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-        $prParams[] = $user['name'];
+    $prFilters = $baseFilters;
+    $prParams = $baseParams;
+    $prFilters[] = "LOWER(decision_status) IN ('pricing in progress', 'under review', 'information gathering')";
+    if ($statusFilter !== '') {
+        $prFilters[] = $statusFilter;
+        $prParams = array_merge($prParams, $statusFilterParams);
     }
-    $stmt = $pdo->prepare($prSql);
+    $prWhere = " WHERE " . implode(" AND ", $prFilters);
+    $stmt = $pdo->prepare("SELECT SUM(total_sar) as pricing_value FROM v4_pipeline" . $prWhere);
     $stmt->execute($prParams);
     $salesMetrics['under_pricing_value'] = floatval($stmt->fetch()['pricing_value'] ?? 0);
 
     // Win Rate (% of Decided Bids) = Won / (Won + Lost)
-    $lostSql = "SELECT SUM(total_sar) as lost_value FROM v4_pipeline WHERE LOWER(decision_status) = 'lost'";
-    $lostParams = [];
-    if ($isSales) {
-        $lostSql .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-        $lostParams[] = $user['name'];
+    $lostFilters = $baseFilters;
+    $lostParams = $baseParams;
+    $lostFilters[] = "LOWER(decision_status) = 'lost'";
+    if ($statusFilter !== '') {
+        $lostFilters[] = $statusFilter;
+        $lostParams = array_merge($lostParams, $statusFilterParams);
     }
-    $stmt = $pdo->prepare($lostSql);
+    $lostWhere = " WHERE " . implode(" AND ", $lostFilters);
+    $stmt = $pdo->prepare("SELECT SUM(total_sar) as lost_value FROM v4_pipeline" . $lostWhere);
     $stmt->execute($lostParams);
     $lostVal = floatval($stmt->fetch()['lost_value'] ?? 0);
     $decidedValue = $wonVal + $lostVal;
     $salesMetrics['win_rate_pct'] = ($decidedValue > 0) ? round(($wonVal / $decidedValue) * 100, 1) : 0;
 
-    $dealsSql = "SELECT COUNT(*) FROM v4_pipeline" . $salesWhere;
+    $dealsSql = "SELECT COUNT(*) FROM v4_pipeline" . $totalWhere;
     $stmt = $pdo->prepare($dealsSql);
-    $stmt->execute($salesParams);
+    $stmt->execute($totalParams);
     $salesMetrics['total_deals'] = intval($stmt->fetchColumn());
 
     // Excel Table 1: Pipeline Bids by Status
-    $v4Statuses = [
-        'Information Gathering',
-        'Under Review',
-        'Pricing in Progress',
-        'Quotation Submitted',
-        'Won',
-        'Lost',
-        'On Hold'
-    ];
-
     $statusTable = [];
     foreach ($v4Statuses as $st) {
-        $stSql = "SELECT COUNT(*) as count, SUM(total_sar) as total_val, MIN(expected_closing) as min_closing, MAX(expected_closing) as max_closing FROM v4_pipeline WHERE ";
-        $stParams = [];
-        if ($st === 'Information Gathering') {
-            $stSql .= "(decision_status = ? OR decision_status IS NULL OR TRIM(decision_status) = '')";
-        } else {
-            $stSql .= "decision_status = ?";
+        if ($selectedDecisionStatus !== '' && $selectedDecisionStatus !== 'All' && $selectedDecisionStatus !== 'All Statuses' && strcasecmp($selectedDecisionStatus, $st) !== 0) {
+            $statusTable[] = [
+                'status' => $st,
+                'count' => 0,
+                'total_val' => 0.0,
+                'pct_of_total' => 0.0,
+                'expected_closing' => '-'
+            ];
+            continue;
         }
-        $stParams[] = $st;
 
-        if ($isSales) {
-            $stSql .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-            $stParams[] = $user['name'];
+        $stConditions = $baseFilters;
+        $stParams = $baseParams;
+
+        if ($st === 'Information Gathering') {
+            $stConditions[] = "(decision_status = 'Information Gathering' OR decision_status IS NULL OR TRIM(decision_status) = '')";
+        } else {
+            $stConditions[] = "decision_status = ?";
+            $stParams[] = $st;
         }
+
+        $stWhere = " WHERE " . implode(" AND ", $stConditions);
+        $stSql = "SELECT COUNT(*) as count, SUM(total_sar) as total_val, MIN(expected_closing) as min_closing, MAX(expected_closing) as max_closing FROM v4_pipeline" . $stWhere;
 
         $stmt = $pdo->prepare($stSql);
         $stmt->execute($stParams);
@@ -131,6 +179,14 @@ if ($user['role'] !== 'pm') {
     }, $statusTable);
 
     // Excel Table 2: Pipeline by Sales Representative
+    $repFilters = $baseFilters;
+    $repParams = $baseParams;
+    if ($statusFilter !== '') {
+        $repFilters[] = $statusFilter;
+        $repParams = array_merge($repParams, $statusFilterParams);
+    }
+    $repWhere = !empty($repFilters) ? " WHERE " . implode(" AND ", $repFilters) : "";
+
     $repSql = "
         SELECT 
             COALESCE(sales_person, 'Unassigned') as salesperson,
@@ -139,13 +195,9 @@ if ($user['role'] !== 'pm') {
             SUM(CASE WHEN LOWER(decision_status) = 'won' OR LOWER(quotation_status) = 'approved' THEN total_sar ELSE 0 END) as won_val,
             SUM(CASE WHEN LOWER(decision_status) = 'lost' THEN total_sar ELSE 0 END) as lost_val
         FROM v4_pipeline
+        $repWhere
+        GROUP BY sales_person ORDER BY total_pipeline DESC, total_inquiries DESC
     ";
-    $repParams = [];
-    if ($isSales) {
-        $repSql .= " WHERE LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
-        $repParams[] = $user['name'];
-    }
-    $repSql .= " GROUP BY sales_person ORDER BY total_pipeline DESC, total_inquiries DESC";
 
     $stmt = $pdo->prepare($repSql);
     $stmt->execute($repParams);
@@ -468,6 +520,13 @@ if ($user['role'] !== 'sales') {
     ];
 }
 
+// Fetch filter options for Pipeline Dashboard
+$salesPeopleStmt = $pdo->query("SELECT DISTINCT sales_person FROM v4_pipeline WHERE sales_person IS NOT NULL AND TRIM(sales_person) != '' ORDER BY sales_person ASC");
+$salesPeopleList = $salesPeopleStmt->fetchAll(PDO::FETCH_COLUMN);
+
+$clientsStmt = $pdo->query("SELECT DISTINCT client FROM v4_pipeline WHERE client IS NOT NULL AND TRIM(client) != '' ORDER BY client ASC");
+$clientsList = $clientsStmt->fetchAll(PDO::FETCH_COLUMN);
+
 echo json_encode([
     'success' => true,
     'user' => [
@@ -476,5 +535,8 @@ echo json_encode([
     ],
     'sales_dashboard' => $salesMetrics,
     'projects_dashboard' => $projectsMetrics,
-    'projects_list' => $projectsList
+    'projects_list' => $projectsList,
+    'sales_people' => $salesPeopleList,
+    'clients_list' => $clientsList,
+    'decision_statuses' => $v4Statuses
 ]);

@@ -254,6 +254,40 @@ $user = Auth::requireLogin(['executive']);
            TAB 1: Pipeline Dashboard (Excel 'Pipeline Dashboard' Sheet)
            =================================================================== -->
       <div class="tab-content active" id="tab-sales-dash">
+        <!-- Pipeline Intelligence Filters -->
+        <div class="action-bar" style="margin-bottom: 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#FFFFFF; padding:12px 18px; border-radius:10px; border:1px solid var(--color-border); box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:14px;">
+            <label style="font-size:0.82rem;font-weight:600;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px;">
+              <span>Sales Rep:</span>
+              <select id="dashSalesPersonSelect" onchange="loadSalesDashboardFiltered()" style="min-width:160px;padding:7px 12px;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;background:#FFFFFF;color:#1E293B;font-weight:500;">
+                <option value="">All Sales Reps</option>
+              </select>
+            </label>
+
+            <label style="font-size:0.82rem;font-weight:600;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px;">
+              <span>Decision Status:</span>
+              <select id="dashSalesStatusSelect" onchange="loadSalesDashboardFiltered()" style="min-width:180px;padding:7px 12px;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;background:#FFFFFF;color:#1E293B;font-weight:500;">
+                <option value="">All Decision Statuses</option>
+              </select>
+            </label>
+
+            <label style="font-size:0.82rem;font-weight:600;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px;">
+              <span>Client / Contractor:</span>
+              <select id="dashSalesClientSelect" onchange="loadSalesDashboardFiltered()" style="min-width:180px;padding:7px 12px;border-radius:6px;border:1px solid #CBD5E1;font-size:0.85rem;background:#FFFFFF;color:#1E293B;font-weight:500;">
+                <option value="">All Clients</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="button" class="btn btn-secondary" onclick="resetSalesDashboardFilters()" style="font-size:0.82rem;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;" title="Reset all pipeline filters">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Reset Filters</span>
+          </button>
+        </div>
+
         <!-- 4 Top KPI Cards (B4:H5) -->
         <div class="kpi-grid">
           <div class="kpi-card highlight-blue">
@@ -725,19 +759,78 @@ $user = Auth::requireLogin(['executive']);
   async function loadDashboardMetrics(projectName = 'All Projects') {
     try {
       const isFiltered = (projectName && projectName !== 'All Projects' && projectName !== 'Company-Wide (All Projects)' && projectName !== 'Company-Wide Projects');
-      const url = 'api/v4_dashboard.php' + (isFiltered ? '?project_name=' + encodeURIComponent(projectName) : '');
+      let params = new URLSearchParams();
+      if (isFiltered) params.append('project_name', projectName);
+
+      const rep = document.getElementById('dashSalesPersonSelect')?.value;
+      const status = document.getElementById('dashSalesStatusSelect')?.value;
+      const client = document.getElementById('dashSalesClientSelect')?.value;
+
+      if (rep) params.append('sales_person', rep);
+      if (status) params.append('decision_status', status);
+      if (client) params.append('client', client);
+
+      const url = 'api/v4_dashboard.php' + (params.toString() ? '?' + params.toString() : '');
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
-        renderSalesDashboard(data.sales_dashboard);
-        renderProjectsDashboard(data.projects_dashboard);
-        if (document.getElementById('dashProjectSelect').options.length <= 1) {
+        if (data.sales_dashboard) {
+          renderSalesDashboard(data.sales_dashboard);
+        }
+        if (data.projects_dashboard) {
+          renderProjectsDashboard(data.projects_dashboard);
+        }
+        if (document.getElementById('dashProjectSelect') && document.getElementById('dashProjectSelect').options.length <= 1) {
           populateProjectSelector(data.projects_list);
         }
+        populatePipelineFilterOptions(data);
       }
     } catch (err) {
       console.error(err);
     }
+  }
+
+  function populatePipelineFilterOptions(data) {
+    const repSel = document.getElementById('dashSalesPersonSelect');
+    if (repSel && repSel.options.length <= 1 && data.sales_people) {
+      data.sales_people.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        repSel.appendChild(opt);
+      });
+    }
+
+    const stSel = document.getElementById('dashSalesStatusSelect');
+    if (stSel && stSel.options.length <= 1 && data.decision_statuses) {
+      data.decision_statuses.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        stSel.appendChild(opt);
+      });
+    }
+
+    const clSel = document.getElementById('dashSalesClientSelect');
+    if (clSel && clSel.options.length <= 1 && data.clients_list) {
+      data.clients_list.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        clSel.appendChild(opt);
+      });
+    }
+  }
+
+  function loadSalesDashboardFiltered() {
+    loadDashboardMetrics(document.getElementById('dashProjectSelect')?.value || 'All Projects');
+  }
+
+  function resetSalesDashboardFilters() {
+    if (document.getElementById('dashSalesPersonSelect')) document.getElementById('dashSalesPersonSelect').value = '';
+    if (document.getElementById('dashSalesStatusSelect')) document.getElementById('dashSalesStatusSelect').value = '';
+    if (document.getElementById('dashSalesClientSelect')) document.getElementById('dashSalesClientSelect').value = '';
+    loadSalesDashboardFiltered();
   }
 
   function populateProjectSelector(list) {
