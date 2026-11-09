@@ -947,30 +947,34 @@ $user = Auth::requireLogin(['executive']);
 
     // Excel Table 2: Pipeline by Sales Representative
     const repTbody = document.getElementById('salesRepsBody');
-    if (s.by_rep_table && s.by_rep_table.length > 0) {
-      const totalLeads = s.by_rep_table.reduce((sum, r) => sum + (parseInt(r.inquiries_count || r.active_leads || 0, 10)), 0);
-      const totalPipe = parseFloat(s.total_pipeline || 0);
+    if (repTbody) {
+      if (s.by_rep_table && s.by_rep_table.length > 0) {
+        const totalLeads = s.by_rep_table.reduce((sum, r) => sum + (parseInt(r.inquiries_count || r.active_leads || 0, 10)), 0);
+        const totalPipe = parseFloat(s.total_pipeline || 0);
 
-      repTbody.innerHTML = s.by_rep_table.map(r => {
-        const pipeVal = parseFloat(r.total_pipeline || 0);
-        const leads = parseInt(r.inquiries_count || r.active_leads || 0, 10);
-        const sharePct = totalPipe > 0 ? ((pipeVal / totalPipe) * 100).toFixed(1) + '%' : '0.0%';
-        return `
-          <tr>
-            <td><strong>${escapeHtml(r.salesperson)}</strong></td>
-            <td class="text-center">${leads}</td>
-            <td class="sar-cell">${formatSarDec(pipeVal, 2)}</td>
-            <td class="text-right">${sharePct}</td>
+        repTbody.innerHTML = s.by_rep_table.map(r => {
+          const pipeVal = parseFloat(r.total_pipeline || 0);
+          const leads = parseInt(r.inquiries_count || r.active_leads || 0, 10);
+          const sharePct = totalPipe > 0 ? ((pipeVal / totalPipe) * 100).toFixed(1) + '%' : '0.0%';
+          return `
+            <tr>
+              <td><strong>${escapeHtml(r.salesperson)}</strong></td>
+              <td class="text-center">${leads}</td>
+              <td class="sar-cell">${formatSarDec(pipeVal, 2)}</td>
+              <td class="text-right">${sharePct}</td>
+            </tr>
+          `;
+        }).join('') + `
+          <tr class="excel-total-row">
+            <td><strong>Total Team Pipeline</strong></td>
+            <td class="text-center">${totalLeads}</td>
+            <td class="sar-cell">${formatSarDec(totalPipe, 2)}</td>
+            <td class="text-right">${totalPipe > 0 ? '100.0%' : '0.0%'}</td>
           </tr>
         `;
-      }).join('') + `
-        <tr class="excel-total-row">
-          <td><strong>Total Team Pipeline</strong></td>
-          <td class="text-center">${totalLeads}</td>
-          <td class="sar-cell">${formatSarDec(totalPipe, 2)}</td>
-          <td class="text-right">${totalPipe > 0 ? '100.0%' : '0.0%'}</td>
-        </tr>
-      `;
+      } else {
+        repTbody.innerHTML = `<tr><td colspan="4" class="text-center" style="padding:20px;color:var(--color-text-muted);">No pipeline inquiries recorded yet. Team members can start adding bids from the Pipeline tab.</td></tr>`;
+      }
     }
   }
 

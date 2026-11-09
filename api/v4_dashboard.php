@@ -202,17 +202,43 @@ if ($user['role'] !== 'pm') {
     $stmt = $pdo->prepare($repSql);
     $stmt->execute($repParams);
     $repRows = $stmt->fetchAll();
-    $repTable = [];
+
+    // Map aggregated data by normalized salesperson name
+    $repDataMap = [];
     foreach ($repRows as $r) {
-        $wonV = floatval($r['won_val']);
-        $lostV = floatval($r['lost_val']);
+        $repDataMap[trim(strtolower($r['salesperson']))] = $r;
+    }
+
+    // Determine list of salespersons to display
+    $salespersonsToDisplay = [];
+    if ($selectedSalesPerson !== '' && $selectedSalesPerson !== 'All' && $selectedSalesPerson !== 'All Sales Reps') {
+        $salespersonsToDisplay = [$selectedSalesPerson];
+    } else {
+        // Fetch canonical team sales persons from v4_lists
+        $stmtSp = $pdo->query("SELECT item_value FROM v4_lists WHERE category = 'Sales Person' ORDER BY display_order ASC, id ASC");
+        $salespersonsToDisplay = $stmtSp->fetchAll(PDO::FETCH_COLUMN);
+        // Also ensure any salesperson found in pipeline records is included
+        foreach ($repRows as $r) {
+            $spName = trim($r['salesperson']);
+            if ($spName !== '' && !in_array($spName, $salespersonsToDisplay)) {
+                $salespersonsToDisplay[] = $spName;
+            }
+        }
+    }
+
+    $repTable = [];
+    foreach ($salespersonsToDisplay as $spName) {
+        $key = trim(strtolower($spName));
+        $r = $repDataMap[$key] ?? null;
+        $wonV = $r ? floatval($r['won_val']) : 0.0;
+        $lostV = $r ? floatval($r['lost_val']) : 0.0;
         $dec = $wonV + $lostV;
         $winRate = ($dec > 0) ? round(($wonV / $dec) * 100, 1) : 0;
-        $pipe = floatval($r['total_pipeline']);
-        $inq = intval($r['total_inquiries']);
+        $pipe = $r ? floatval($r['total_pipeline']) : 0.0;
+        $inq = $r ? intval($r['total_inquiries']) : 0;
 
         $repTable[] = [
-            'salesperson' => $r['salesperson'],
+            'salesperson' => $spName,
             'inquiries_count' => $inq,
             'active_leads' => $inq,
             'total_pipeline' => $pipe,
@@ -221,6 +247,18 @@ if ($user['role'] !== 'pm') {
             'share_pct' => ($totalPipeline > 0) ? round(($pipe / $totalPipeline) * 100, 1) : 0.0
         ];
     }
+
+    // Sort by pipeline value DESC, then inquiries DESC, then salesperson ASC
+    usort($repTable, function($a, $b) {
+        if ($b['total_pipeline'] != $a['total_pipeline']) {
+            return ($b['total_pipeline'] > $a['total_pipeline']) ? 1 : -1;
+        }
+        if ($b['inquiries_count'] != $a['inquiries_count']) {
+            return $b['inquiries_count'] - $a['inquiries_count'];
+        }
+        return strcmp($a['salesperson'], $b['salesperson']);
+    });
+
     $salesMetrics['by_rep_table'] = $repTable;
     $salesMetrics['by_rep'] = array_map(function($x) {
         return ['salesperson' => $x['salesperson'], 'count' => $x['inquiries_count'], 'total_val' => $x['total_pipeline']];
@@ -438,20 +476,46 @@ if ($user['role'] !== 'sales') {
     $stmt = $pdo->prepare($pmSql);
     $stmt->execute($pmParams);
     $pmRows = $stmt->fetchAll();
-    $pmTable = [];
+
+    $pmDataMap = [];
     foreach ($pmRows as $r) {
-        $inv = floatval($r['invoiced']);
-        $col = floatval($r['collected']);
+        $pmDataMap[trim(strtolower($r['pm']))] = $r;
+    }
+
+    $pmListToDisplay = [];
+    if ($isPm) {
+        $pmListToDisplay = [$user['name']];
+    } else {
+        $stmtPms = $pdo->query("SELECT item_value FROM v4_lists WHERE category = 'Project Manager' ORDER BY display_order ASC, id ASC");
+        $pmListToDisplay = $stmtPms->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($pmRows as $r) {
+            $pmName = trim($r['pm']);
+            if ($pmName !== '' && !in_array($pmName, $pmListToDisplay)) {
+                $pmListToDisplay[] = $pmName;
+            }
+        }
+    }
+
+    $pmTable = [];
+    foreach ($pmListToDisplay as $pmName) {
+        $key = trim(strtolower($pmName));
+        $r = $pmDataMap[$key] ?? null;
+        $pCnt = $r ? intval($r['projects_count']) : 0;
+        $mCnt = $r ? intval($r['milestone_count']) : 0;
+        $val = $r ? floatval($r['total_milestone_val']) : 0.0;
+        $inv = $r ? floatval($r['invoiced']) : 0.0;
+        $col = $r ? floatval($r['collected']) : 0.0;
+        $pend = $r ? floatval($r['pending']) : 0.0;
         $eff = ($inv > 0) ? round(($col / $inv) * 100, 1) : 0;
 
         $pmTable[] = [
-            'pm' => $r['pm'],
-            'projects_count' => intval($r['projects_count']),
-            'milestones_count' => intval($r['milestone_count']),
-            'total_value' => floatval($r['total_milestone_val']),
+            'pm' => $pmName,
+            'projects_count' => $pCnt,
+            'milestones_count' => $mCnt,
+            'total_value' => $val,
             'invoiced' => $inv,
             'collected' => $col,
-            'pending' => floatval($r['pending']),
+            'pending' => $pend,
             'collection_efficiency' => $eff
         ];
     }
