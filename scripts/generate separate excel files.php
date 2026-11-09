@@ -258,3 +258,4 @@ if (is_dir($downloadsDir)) {
 }
 
 echo "SUCCESS: Generated both files successfully!\n";
+
