@@ -75,7 +75,7 @@ for shape in s2.shapes:
         tf.paragraphs[1].runs[0].font.bold = True
 
 # Helper function for concise bullets
-def populate_bullets(shape, bullet_items):
+def populate_bullets(shape, bullet_items, font_size=9.0, space_after=3.5):
     tf = shape.text_frame
     tf.word_wrap = True
     p_elements = tf._txBody.xpath("./a:p")
@@ -87,29 +87,29 @@ def populate_bullets(shape, bullet_items):
     
     for idx, (label, desc) in enumerate(bullet_items):
         p = p_first if idx == 0 else tf.add_paragraph()
-        p.space_after = Pt(4)
-        p.line_spacing = 1.15
+        p.space_after = Pt(space_after)
+        p.line_spacing = 1.14
         
         # Bullet symbol
         r1 = p.add_run()
         r1.text = "•  "
         r1.font.color.rgb = COLOR_CYAN
         r1.font.bold = True
-        r1.font.size = Pt(9.5)
+        r1.font.size = Pt(font_size)
         
         # Headline label
         r2 = p.add_run()
         r2.text = label + ": "
         r2.font.color.rgb = COLOR_DARK
         r2.font.bold = True
-        r2.font.size = Pt(9.5)
+        r2.font.size = Pt(font_size)
         
         # Description
         r3 = p.add_run()
         r3.text = desc
         r3.font.color.rgb = COLOR_GRAY
         r3.font.bold = False
-        r3.font.size = Pt(9.5)
+        r3.font.size = Pt(font_size)
 
 # --- CARD 1 (Top-Left): MVS Sales & Projects Portal ---
 for shape in s2.shapes:
@@ -148,9 +148,10 @@ for shape in s2.shapes:
             ("Live Deployment", "Operational at portal.mvsksa.com with active SSL encryption."),
             ("Team Onboarding", "All user accounts created with official MVS emails and default credentials."),
             ("Live Data Entry", "Sample records cleared; live pipelines and projects being actively entered."),
-            ("Master Excel Sync", "Dynamic export engine providing clean OneDrive master tracking files.")
+            ("Master Excel Sync", "Dynamic export engine providing clean OneDrive master tracking files."),
+            ("Odoo ERP Kickoff", "Initiating setup for Quotations, POs, Proforma Invoices, and operational workflows.")
         ]
-        populate_bullets(shape, bullets1)
+        populate_bullets(shape, bullets1, font_size=8.8, space_after=3.0)
 
 # --- CARD 2 (Top-Right): Salam CCS — KPI Framework ---
 for shape in s2.shapes:
@@ -249,9 +250,10 @@ for shape in s2.shapes:
         bullets4 = [
             ("Hardware & SIM Custody", "Managing 83 hardware units (79 in use, 4 in stock) and 50 telecom lines."),
             ("Week 46 Procurement", "Procured & deployed 6 LG 27\" UltraGear monitors and cables (5,148 SAR, Jarir)."),
+            ("New Team Resource", "Planning onboarding of an additional technical resource to expand team capacity."),
             ("Daily IT Support", "Workstation maintenance, network support, and meeting room AV readiness.")
         ]
-        populate_bullets(shape, bullets4)
+        populate_bullets(shape, bullets4, font_size=8.8, space_after=3.0)
 
 # -------------------------------------------------------------
 # SLIDE 3: IT Assets & Telecom Inventory Dashboard (Updated Image)
