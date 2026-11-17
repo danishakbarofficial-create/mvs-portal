@@ -22,3 +22,4 @@ try {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+

@@ -633,18 +633,28 @@ $user = Auth::requireLogin(['executive']);
                 <th>No.</th>
                 <th>Sales Person</th>
                 <th>Project Name</th>
-                <th>Client</th>
+                <th>Client / Organization</th>
                 <th>Main Contractor</th>
+                <th>Consultant</th>
+                <th>Brief Scope &amp; Technical Work</th>
                 <th>Quotation No.</th>
+                <th>Quotation Status</th>
                 <th style="text-align:right;">Total SAR (incl. VAT)</th>
+                <th>Date Received</th>
+                <th>Submission Date</th>
+                <th>Quotation Valid Until</th>
+                <th>Expected Closing</th>
+                <th>Client Contact Person</th>
+                <th>Contact Details</th>
                 <th>Decision Status</th>
                 <th>Missing Info</th>
-                <th>Next Step</th>
-                <th>Expected Closing</th>
+                <th>Follow-Up Date</th>
+                <th>Immediate Next Step</th>
+                <th>Internal Notes</th>
               </tr>
             </thead>
             <tbody id="masterPipelineBody">
-              <tr><td colspan="11" class="loading-td">Loading master pipeline...</td></tr>
+              <tr><td colspan="21" class="loading-td">Loading master pipeline...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1356,28 +1366,60 @@ $user = Auth::requireLogin(['executive']);
     }
   }
 
+  function formatDate(d) {
+    if (!d) return '-';
+    return d.split(' ')[0];
+  }
+
+  function getQuotationStatusBadge(status) {
+    status = status || 'Open';
+    const s = status.trim().toLowerCase();
+    let cls = 'badge-blue';
+    if (s === 'approved') cls = 'badge-green';
+    else if (s === 'not approved' || s === 'cancelled') cls = 'badge-red';
+    else if (s === 'on hold') cls = 'badge-amber';
+    else if (s === 'closed') cls = 'badge-gray';
+    else if (s === 'open') cls = 'badge-blue';
+    return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
+  }
+
   function renderMasterPipeline(records) {
     const tbody = document.getElementById('masterPipelineBody');
     if (records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" class="empty-td">No pipeline records found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="21" class="empty-td">No pipeline records found.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = records.map((r, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td><strong>${escapeHtml(r.sales_person || '')}</strong></td>
-        <td><strong class="proj-title">${escapeHtml(r.project_name || '')}</strong></td>
-        <td>${escapeHtml(r.client || '')}</td>
-        <td>${escapeHtml(r.main_contractor || '-')}</td>
-        <td><code>${escapeHtml(r.quotation_no || '-')}</code></td>
-        <td class="sar-cell">${Number(r.total_sar || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        <td>${getStatusBadge(r.decision_status)}</td>
-        <td><span class="missing-badge">${escapeHtml(r.missing_info || 'None')}</span></td>
-        <td><span class="next-step-pill">${escapeHtml(r.next_step || '-')}</span></td>
-        <td>${r.expected_closing || '-'}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = records.map((r, i) => {
+      const statusBadge = getStatusBadge(r.decision_status);
+      const qStatusBadge = getQuotationStatusBadge(r.quotation_status);
+      const sarFormatted = Number(r.total_sar || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${escapeHtml(r.sales_person || '')}</strong></td>
+          <td><strong class="proj-title">${escapeHtml(r.project_name || '')}</strong></td>
+          <td>${escapeHtml(r.client || '-')}</td>
+          <td>${escapeHtml(r.main_contractor || '-')}</td>
+          <td>${escapeHtml(r.consultant || '-')}</td>
+          <td><span class="scope-text" title="${escapeHtml(r.scope_of_work || '')}">${escapeHtml(r.scope_of_work || '-')}</span></td>
+          <td><code>${escapeHtml(r.quotation_no || '-')}</code></td>
+          <td>${qStatusBadge}</td>
+          <td class="sar-cell">${sarFormatted}</td>
+          <td>${formatDate(r.date_received)}</td>
+          <td>${formatDate(r.submission_date)}</td>
+          <td>${formatDate(r.quotation_valid_until)}</td>
+          <td>${escapeHtml(r.expected_closing || '-')}</td>
+          <td>${escapeHtml(r.contact_person || '-')}</td>
+          <td>${escapeHtml(r.contact_details || '-')}</td>
+          <td>${statusBadge}</td>
+          <td><span class="missing-badge">${escapeHtml(r.missing_info || 'None')}</span></td>
+          <td>${formatDate(r.follow_up_date)}</td>
+          <td><span class="next-step-pill">${escapeHtml(r.next_step || '-')}</span></td>
+          <td><span class="scope-text" title="${escapeHtml(r.notes || '')}">${escapeHtml(r.notes || '-')}</span></td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function filterMasterPipeline() {
@@ -1534,20 +1576,37 @@ $user = Auth::requireLogin(['executive']);
 
   function exportMasterPipelineCsv() {
     if (allPipelineRecords.length === 0) return alert('No data to export');
-    const headers = ["No.", "Sales Person", "Project Name", "Client", "Main Contractor", "Quotation No", "Total SAR", "Decision Status", "Expected Closing", "Next Step"];
+    const headers = [
+      "No.", "Sales Person", "Project Name", "Client / Organization", "Main Contractor", "Consultant",
+      "Brief Scope & Technical Work", "Quotation No", "Quotation Status", "Total SAR (incl. VAT)",
+      "Date Received", "Submission Date", "Quotation Valid Until", "Expected Closing",
+      "Client Contact Person", "Contact Details", "Decision Status", "Missing Info",
+      "Follow-Up Date", "Immediate Next Step", "Internal Notes"
+    ];
     const rows = allPipelineRecords.map((r, i) => [
       i + 1,
       `"${(r.sales_person||'').replace(/"/g, '""')}"`,
       `"${(r.project_name||'').replace(/"/g, '""')}"`,
       `"${(r.client||'').replace(/"/g, '""')}"`,
       `"${(r.main_contractor||'').replace(/"/g, '""')}"`,
+      `"${(r.consultant||'').replace(/"/g, '""')}"`,
+      `"${(r.scope_of_work||'').replace(/"/g, '""')}"`,
       `"${(r.quotation_no||'').replace(/"/g, '""')}"`,
+      `"${(r.quotation_status||'').replace(/"/g, '""')}"`,
       r.total_sar || 0,
-      `"${(r.decision_status||'').replace(/"/g, '""')}"`,
+      `"${(r.date_received||'').replace(/"/g, '""')}"`,
+      `"${(r.submission_date||'').replace(/"/g, '""')}"`,
+      `"${(r.quotation_valid_until||'').replace(/"/g, '""')}"`,
       `"${(r.expected_closing||'').replace(/"/g, '""')}"`,
-      `"${(r.next_step||'').replace(/"/g, '""')}"`
+      `"${(r.contact_person||'').replace(/"/g, '""')}"`,
+      `"${(r.contact_details||'').replace(/"/g, '""')}"`,
+      `"${(r.decision_status||'').replace(/"/g, '""')}"`,
+      `"${(r.missing_info||'').replace(/"/g, '""')}"`,
+      `"${(r.follow_up_date||'').replace(/"/g, '""')}"`,
+      `"${(r.next_step||'').replace(/"/g, '""')}"`,
+      `"${(r.notes||'').replace(/"/g, '""')}"`
     ]);
-    downloadCsv(headers, rows, 'Master_Sales_Pipeline');
+    downloadCsv(headers, rows, 'Master Sales Pipeline');
   }
 
   function exportMasterProjectsCsv() {
@@ -1570,7 +1629,7 @@ $user = Auth::requireLogin(['executive']);
       r.collected_amount || 0,
       r.pending_collection || 0
     ]);
-    downloadCsv(headers, rows, 'Master_Awarded_Projects');
+    downloadCsv(headers, rows, 'Master Awarded Projects');
   }
 
   function downloadCsv(headers, rows, prefix) {
@@ -1578,7 +1637,7 @@ $user = Auth::requireLogin(['executive']);
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${prefix}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `${prefix} ${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
