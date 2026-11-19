@@ -38,7 +38,7 @@ COLOR_PURPLE_BG = RGBColor(243, 232, 255) # F3E8FF
 COLOR_PURPLE_TEXT = RGBColor(107, 33, 168) # 6B21A8
 
 # Helper function for concise bullets
-def populate_bullets(shape, bullet_items, font_size=9.2, space_after=6.0, line_spacing=1.18):
+def populate_bullets(shape, bullet_items, font_size=8.6, space_after=3.0, line_spacing=1.14):
     tf = shape.text_frame
     tf.word_wrap = True
     p_elements = tf._txBody.xpath("./a:p")
@@ -73,6 +73,32 @@ def populate_bullets(shape, bullet_items, font_size=9.2, space_after=6.0, line_s
         r3.font.color.rgb = COLOR_GRAY
         r3.font.bold = False
         r3.font.size = Pt(font_size)
+
+def set_badge(text_shape, text, text_color, font_size=7.8, bg_shape=None, bg_color=None, left=None, width=None):
+    if bg_shape:
+        if left is not None:
+            bg_shape.left = left
+        if width is not None:
+            bg_shape.width = width
+        if bg_color:
+            bg_shape.fill.solid()
+            bg_shape.fill.fore_color.rgb = bg_color
+            
+    if left is not None:
+        text_shape.left = left
+    if width is not None:
+        text_shape.width = width
+        
+    tf = text_shape.text_frame
+    tf.word_wrap = False
+    p = tf.paragraphs[0]
+    p.text = ""
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    run.text = text
+    run.font.color.rgb = text_color
+    run.font.bold = True
+    run.font.size = Pt(font_size)
 
 def set_footer(slide, slide_num, total_slides=4):
     for shape in slide.shapes:
@@ -134,74 +160,114 @@ for shape in s2.shapes:
         tf.paragraphs[1].runs[0].font.color.rgb = COLOR_NAVY
         tf.paragraphs[1].runs[0].font.bold = True
 
-# Card 1: MVS Sales & Projects Portal
-for shape in s2.shapes:
-    if shape.name == "TextBox 8":
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = ""
-        r1 = p.add_run()
-        r1.text = "◆  "
-        r1.font.color.rgb = COLOR_CYAN
-        r2 = p.add_run()
-        r2.text = "MVS Sales & Projects Portal"
-        r2.font.color.rgb = COLOR_NAVY
-        r2.font.bold = True
-        r2.font.size = Pt(11.0)
-        shape.width = 3500000
+# Shape dictionary for s2 badges
+s2_shapes = {s.name: s for s in s2.shapes}
 
-    elif shape.name == "TextBox 11":
-        bullets1 = [
-            ("Live Deployment", "Operational at portal.mvsksa.com with active SSL encryption."),
-            ("Team Onboarding", "All commercial and PM accounts created and actively logging in."),
-            ("26-Column Registers", "Full master Excel alignment across Sales Pipeline and Awarded Projects."),
-            ("Formula Automation", "Live calculation for Months to Close, Invoicing Backlog, and Pending Collections.")
-        ]
-        populate_bullets(shape, bullets1, font_size=8.8, space_after=3.0)
+# Card 1: MVS Sales & Projects Portal
+if "TextBox 8" in s2_shapes:
+    tf = s2_shapes["TextBox 8"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "MVS Sales & Projects Portal"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(10.5)
+    s2_shapes["TextBox 8"].width = 3450000
+
+if "TextBox 10" in s2_shapes and "Rounded Rectangle 9" in s2_shapes:
+    set_badge(s2_shapes["TextBox 10"], "✓ LIVE & ADOPTION", COLOR_GREEN_TEXT, 7.6, s2_shapes["Rounded Rectangle 9"], COLOR_GREEN_BG, 4120000, 1720000)
+
+if "TextBox 11" in s2_shapes:
+    bullets1 = [
+        ("Portal Status", "Live and functional at portal.mvsksa.com with SSL security."),
+        ("Sales Team Onboarding", "Login credentials distributed to all sales team members for active data entry."),
+        ("PM Team Alignment", "Conducting system walkthrough and demo with Project Managers today."),
+        ("Feature Enhancements", "Requested updates (26-column sync & formulas) targeted live by next week (ETA: 26 Nov).")
+    ]
+    populate_bullets(s2_shapes["TextBox 11"], bullets1, font_size=8.5, space_after=3.0)
 
 # Card 2: Salam CCS — KPI Framework
-for shape in s2.shapes:
-    if shape.name == "TextBox 17":
-        bullets2 = [
-            ("Data Integration", "Received patrolling and supervisor tracking data from Mr. Tahir Anjum."),
-            ("Scoring Models", "Structuring calculation formulas for SLA compliance, CMR/PMR, and team rankings."),
-            ("Executive Scorecard", "Designing consolidated dashboard view for weekly management review.")
-        ]
-        populate_bullets(shape, bullets2, font_size=8.8, space_after=3.0)
+if "TextBox 14" in s2_shapes:
+    tf = s2_shapes["TextBox 14"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "Salam CCS — KPI Framework"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(10.5)
+    s2_shapes["TextBox 14"].width = 3600000
+
+if "TextBox 16" in s2_shapes and "Rounded Rectangle 15" in s2_shapes:
+    set_badge(s2_shapes["TextBox 16"], "● IN PROGRESS (ETA: 26 NOV)", COLOR_BLUE_TEXT, 7.2, s2_shapes["Rounded Rectangle 15"], COLOR_BLUE_BG, 9750000, 1830000)
+
+if "TextBox 17" in s2_shapes:
+    bullets2 = [
+        ("Data Pipeline", "Patrolling and supervisor logs integrated from Mr. Tahir Anjum."),
+        ("Scoring & Logic", "Developing calculation formulas for SLA compliance, CMR/PMR, and team rankings."),
+        ("Review Milestone", "Draft KPI model & executive scorecard targeted for management review (ETA: 26 Nov).")
+    ]
+    populate_bullets(s2_shapes["TextBox 17"], bullets2, font_size=8.5, space_after=3.0)
 
 # Card 3: FO Route Survey Application (DCP-1)
-for shape in s2.shapes:
-    if shape.name == "TextBox 23":
-        bullets3 = [
-            ("Survey Operations", "Ongoing QA alignment checks, utility classifications, and highway mapping."),
-            ("Field & Data Backups", "Continuous KMZ exports, database integrity backups, and survey team sync.")
-        ]
-        populate_bullets(shape, bullets3, font_size=8.8, space_after=3.0)
+if "TextBox 20" in s2_shapes:
+    tf = s2_shapes["TextBox 20"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "FO Route Survey (DCP-1)"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(10.5)
+    s2_shapes["TextBox 20"].width = 3450000
+
+if "TextBox 22" in s2_shapes and "Rounded Rectangle 21" in s2_shapes:
+    set_badge(s2_shapes["TextBox 22"], "◆ SUBMISSION PHASE", COLOR_AMBER_TEXT, 7.5, s2_shapes["Rounded Rectangle 21"], COLOR_AMBER_BG, 4120000, 1720000)
+
+if "TextBox 23" in s2_shapes:
+    bullets3 = [
+        ("Original Scope", "Initial project scope survey documentation is being submitted today (19 Nov)."),
+        ("Additional Scope", "Final supplementary route scope scheduled for submission by Monday (23 Nov)."),
+        ("Project Completion", "Marks full survey completion, pending any further data requests from Tawasul.")
+    ]
+    populate_bullets(s2_shapes["TextBox 23"], bullets3, font_size=8.5, space_after=3.0)
 
 # Card 4: IT Infrastructure & Asset Governance
-for shape in s2.shapes:
-    if shape.name == "TextBox 26":
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = ""
-        r1 = p.add_run()
-        r1.text = "◆  "
-        r1.font.color.rgb = COLOR_CYAN
-        r2 = p.add_run()
-        r2.text = "IT Infrastructure & Assets"
-        r2.font.color.rgb = COLOR_NAVY
-        r2.font.bold = True
-        r2.font.size = Pt(11.0)
-        shape.width = 3500000
+if "TextBox 26" in s2_shapes:
+    tf = s2_shapes["TextBox 26"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "IT Infrastructure & Assets"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(10.5)
+    s2_shapes["TextBox 26"].width = 3600000
 
-    elif shape.name == "TextBox 29":
-        bullets4 = [
-            ("Hardware & SIM Custody", "Managing 83 hardware units (79 in use, 4 in stock) and 50 telecom lines."),
-            ("Week 46-47 Procurement", "Procured & deployed 6 LG 27\" UltraGear monitors and cables (5,148 SAR, Jarir)."),
-            ("New Team Resource", "Planning onboarding of an additional technical resource to expand team capacity."),
-            ("Daily IT Support", "Workstation maintenance, network support, and meeting room AV readiness.")
-        ]
-        populate_bullets(shape, bullets4, font_size=8.8, space_after=3.0)
+if "TextBox 28" in s2_shapes and "Rounded Rectangle 27" in s2_shapes:
+    set_badge(s2_shapes["TextBox 28"], "✓ EXPANDING TEAM", COLOR_GREEN_TEXT, 7.5, s2_shapes["Rounded Rectangle 27"], COLOR_GREEN_BG, 10050000, 1530000)
+
+if "TextBox 29" in s2_shapes:
+    bullets4 = [
+        ("Team Capacity", "Onboarding an additional technical team resource this Sunday (22 Nov) to boost output."),
+        ("Asset Custody", "Active management of 83 IT hardware units (79 active, 4 buffer) and 50 telecom lines."),
+        ("Monitor Deployment", "Procured & deployed 6 LG 27\" UltraGear monitors from Jarir Bookstore (5,148 SAR)."),
+        ("Operations Support", "Ongoing network stability, workstation maintenance, and boardroom AV readiness.")
+    ]
+    populate_bullets(s2_shapes["TextBox 29"], bullets4, font_size=8.5, space_after=3.0)
 
 # -------------------------------------------------------------
 # CREATE NEW SLIDE 3: Strategic Initiatives (Salam Automation & Odoo ERP)
@@ -251,102 +317,72 @@ for shape in list(s3.shapes):
         sp = shape._element
         sp.getparent().remove(sp)
 
+s3_shapes = {s.name: s for s in s3.shapes}
+
 # Configure Left Card: Salam Automation & Dashboard
 CARD_HEIGHT = 4950000
-for shape in s3.shapes:
-    if shape.name == "Rounded Rectangle 6":
-        shape.height = CARD_HEIGHT
-        
-    elif shape.name == "TextBox 8":
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = ""
-        r1 = p.add_run()
-        r1.text = "◆  "
-        r1.font.color.rgb = COLOR_CYAN
-        r2 = p.add_run()
-        r2.text = "Salam Automation & Dashboard"
-        r2.font.color.rgb = COLOR_NAVY
-        r2.font.bold = True
-        r2.font.size = Pt(11.5)
-        shape.width = 3300000
+if "Rounded Rectangle 6" in s3_shapes:
+    s3_shapes["Rounded Rectangle 6"].height = CARD_HEIGHT
 
-    elif shape.name == "Rounded Rectangle 9":
-        shape.fill.solid()
-        shape.fill.fore_color.rgb = COLOR_BLUE_BG
-        shape.left = 3950000
-        shape.width = 1890000
-        
-    elif shape.name == "TextBox 10":
-        shape.left = 3950000
-        shape.width = 1890000
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = "● ROADMAP & PLAN"
-        p.alignment = PP_ALIGN.CENTER
-        if p.runs:
-            p.runs[0].font.color.rgb = COLOR_BLUE_TEXT
-            p.runs[0].font.bold = True
-            p.runs[0].font.size = Pt(8.0)
+if "TextBox 8" in s3_shapes:
+    tf = s3_shapes["TextBox 8"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "Salam Automation & Dashboard"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(11.5)
+    s3_shapes["TextBox 8"].width = 3300000
 
-    elif shape.name == "TextBox 11":
-        shape.height = 4300000
-        bullets_salam = [
-            ("Implementation Roadmap", "Currently actively working on the detailed automation roadmap and finalizing the phased execution plan."),
-            ("Operations Dashboard", "Designing real-time operational dashboard for executive oversight, field tracking, and SLA visibility."),
-            ("Automated Ingestion", "Establishing automated data pipelines to capture daily patrolling and supervisor logs without manual lag."),
-            ("Performance Analytics", "Integrating scoring formulas for CMR/PMR resolution, preventive maintenance, and team rankings."),
-            ("Stakeholder Review", "Structuring scheduled milestone presentations to align deliverables with Salam CCS management.")
-        ]
-        populate_bullets(shape, bullets_salam, font_size=9.2, space_after=9.0, line_spacing=1.2)
+if "TextBox 10" in s3_shapes and "Rounded Rectangle 9" in s3_shapes:
+    set_badge(s3_shapes["TextBox 10"], "● ROADMAP & PLANNING", COLOR_BLUE_TEXT, 7.8, s3_shapes["Rounded Rectangle 9"], COLOR_BLUE_BG, 3850000, 1990000)
+
+if "TextBox 11" in s3_shapes:
+    s3_shapes["TextBox 11"].height = 4300000
+    bullets_salam = [
+        ("Roadmap & Execution Plan", "Currently actively working on the detailed automation roadmap and finalizing the implementation plan."),
+        ("Real-Time Operations Dashboard", "Designing executive dashboard view for live operational oversight, patrolling coverage, and SLA visibility."),
+        ("Automated Data Pipelines", "Establishing automated data intake from field logs to eliminate manual delays and reporting bottlenecks."),
+        ("Performance Analytics Engine", "Structuring automated scoring models for PMR/CMR resolutions, preventive maintenance, and team rankings."),
+        ("Target Review Milestone", "Targeting initial dashboard framework review with Salam CCS stakeholders by Next Thursday (ETA: 26 Nov).")
+    ]
+    populate_bullets(s3_shapes["TextBox 11"], bullets_salam, font_size=9.2, space_after=9.0, line_spacing=1.2)
 
 # Configure Right Card: Odoo ERP Implementation
-for shape in s3.shapes:
-    if shape.name == "Rounded Rectangle 12":
-        shape.height = CARD_HEIGHT
-        
-    elif shape.name == "TextBox 14":
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = ""
-        r1 = p.add_run()
-        r1.text = "◆  "
-        r1.font.color.rgb = COLOR_CYAN
-        r2 = p.add_run()
-        r2.text = "Odoo ERP Implementation"
-        r2.font.color.rgb = COLOR_NAVY
-        r2.font.bold = True
-        r2.font.size = Pt(11.5)
-        shape.width = 3300000
+if "Rounded Rectangle 12" in s3_shapes:
+    s3_shapes["Rounded Rectangle 12"].height = CARD_HEIGHT
 
-    elif shape.name == "Rounded Rectangle 15":
-        shape.fill.solid()
-        shape.fill.fore_color.rgb = COLOR_PURPLE_BG
-        shape.left = 9690000
-        shape.width = 1890000
-        
-    elif shape.name == "TextBox 16":
-        shape.left = 9690000
-        shape.width = 1890000
-        tf = shape.text_frame
-        p = tf.paragraphs[0]
-        p.text = "● IN PROGRESS & SCOPING"
-        p.alignment = PP_ALIGN.CENTER
-        if p.runs:
-            p.runs[0].font.color.rgb = COLOR_PURPLE_TEXT
-            p.runs[0].font.bold = True
-            p.runs[0].font.size = Pt(7.8)
+if "TextBox 14" in s3_shapes:
+    tf = s3_shapes["TextBox 14"].text_frame
+    p = tf.paragraphs[0]
+    p.text = ""
+    r1 = p.add_run()
+    r1.text = "◆  "
+    r1.font.color.rgb = COLOR_CYAN
+    r2 = p.add_run()
+    r2.text = "Odoo ERP Implementation"
+    r2.font.color.rgb = COLOR_NAVY
+    r2.font.bold = True
+    r2.font.size = Pt(11.5)
+    s3_shapes["TextBox 14"].width = 3300000
 
-    elif shape.name == "TextBox 17":
-        shape.height = 4300000
-        bullets_odoo = [
-            ("Product Part Configuration", "Actively working on the product catalog, technical item master, and product part structure."),
-            ("Odoo Partner Coordination", "In continuous contact with Odoo implementation team to align customizations and technical parameters."),
-            ("Tag-Based Description", "Configuring custom tag-based descriptions for flexible item identification and dynamic quoting."),
-            ("Commercial Workflows", "Scoping core modules for Quotations, Purchase Orders (PO), and Proforma Invoices."),
-            ("Data Integrity Assurance", "Executing phased rollout strictly maintaining and preserving existing business operations and data.")
-        ]
-        populate_bullets(shape, bullets_odoo, font_size=9.2, space_after=9.0, line_spacing=1.2)
+if "TextBox 16" in s3_shapes and "Rounded Rectangle 15" in s3_shapes:
+    set_badge(s3_shapes["TextBox 16"], "● IN PROGRESS (ETA: 26 NOV)", COLOR_PURPLE_TEXT, 7.2, s3_shapes["Rounded Rectangle 15"], COLOR_PURPLE_BG, 9550000, 2030000)
+
+if "TextBox 17" in s3_shapes:
+    s3_shapes["TextBox 17"].height = 4300000
+    bullets_odoo = [
+        ("Commercial Templates Kickoff", "Work started on standardizing layout templates for Quotations, Purchase Orders (PO), and Proforma Invoices."),
+        ("Product Part Configuration", "Actively configuring the product catalog structure, technical items master, and product part definitions."),
+        ("Odoo Partner Coordination", "In continuous technical communication with Odoo implementation partner for specialized custom requirements."),
+        ("Tag-Based Description System", "Engineering dynamic tag-based item descriptions for accurate quotation generation and category management."),
+        ("Zero-Disruption Rollout Plan", "Targeting initial template & workflow sign-off by Next Thursday (ETA: 26 Nov), with zero disruption to active data.")
+    ]
+    populate_bullets(s3_shapes["TextBox 17"], bullets_odoo, font_size=9.2, space_after=9.0, line_spacing=1.2)
 
 # -------------------------------------------------------------
 # SLIDE 4: IT Assets & Telecom Inventory Dashboard (Slide 4 of 4)
@@ -357,7 +393,6 @@ set_footer(s4, 4, 4)
 if os.path.exists(ASSET_IMG_PATH):
     for s in list(s4.shapes):
         if s.name == "Picture 7":
-            # Target image: 1405 x 1019 -> aspect ratio 1.3788
             target_h = 4750000
             target_w = int(target_h * 1.3788)
             target_t = 1422400 + int((4978400 - target_h) / 2)
