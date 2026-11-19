@@ -120,8 +120,11 @@ function computeMilestoneFormulas(array $data, ?array $existing = null): array {
         try {
             $d1 = new DateTime($poDate);
             $d2 = new DateTime($expectedClosing);
-            $diff = $d1->diff($d2);
-            $monthsToClose = ($diff->y * 12) + $diff->m + ($diff->invert ? -$diff->m : 0) + 1;
+            $y1 = intval($d1->format('Y'));
+            $m1 = intval($d1->format('n'));
+            $y2 = intval($d2->format('Y'));
+            $m2 = intval($d2->format('n'));
+            $monthsToClose = (($y2 - $y1) * 12) + ($m2 - $m1) + 1;
         } catch (Exception $e) {
             $monthsToClose = null;
         }

@@ -429,24 +429,34 @@ $user = Auth::requireLogin(['pm', 'executive']);
                 <th>Project Manager</th>
                 <th>Project Name</th>
                 <th>Customer</th>
+                <th>PO Status</th>
                 <th>PO No.</th>
-                <th style="text-align:right;">Total PO (SAR)</th>
+                <th>PO Date</th>
+                <th style="text-align:right;">Total PO Value (SAR)</th>
+                <th>Expected Closing</th>
+                <th style="text-align:center;">Months to Close</th>
                 <th>Milestone #</th>
                 <th>Milestone Description</th>
-                <th style="text-align:right;">Milestone SAR</th>
+                <th style="text-align:right;">Milestone Value (SAR)</th>
                 <th>Milestone Status</th>
-                <th>Tech Report</th>
+                <th>Technical Report</th>
                 <th>Invoice Status</th>
                 <th>Invoice No.</th>
-                <th style="text-align:right;">Invoiced SAR</th>
-                <th style="text-align:right;">Collected SAR</th>
-                <th style="text-align:right;">Pending SAR</th>
-                <th>Actions</th>
+                <th>Invoice Date</th>
+                <th style="text-align:right;">Invoice Amount (SAR)</th>
+                <th>Collection Date</th>
+                <th style="text-align:right;">Collected Amount (SAR)</th>
+                <th>Collection Status</th>
+                <th style="text-align:right;">Pending Collection (SAR)</th>
+                <th style="text-align:right;">To Be Invoiced (SAR)</th>
+                <th>Notes</th>
+                <th>Additional Notes</th>
+                <th style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody id="projectsTableBody">
               <tr>
-                <td colspan="17" class="loading-td">Loading project milestones...</td>
+                <td colspan="27" class="loading-td">Loading project milestones...</td>
               </tr>
             </tbody>
           </table>
@@ -523,7 +533,18 @@ $user = Auth::requireLogin(['pm', 'executive']);
             </div>
             <div class="form-group">
               <label>PO Award Date</label>
-              <input type="date" id="poDate">
+              <input type="date" id="poDate" onchange="recalcLive()">
+            </div>
+          </div>
+
+          <div class="form-row col-2">
+            <div class="form-group">
+              <label>Expected Closing Date</label>
+              <input type="date" id="expectedClosing" onchange="recalcLive()">
+            </div>
+            <div class="form-group">
+              <label>Months to Close (Calculated)</label>
+              <input type="text" id="monthsToClose" readonly value="-" style="background:#F8FAFC;color:#0F172A;font-weight:700;">
             </div>
           </div>
         </div>
@@ -1082,7 +1103,7 @@ $user = Auth::requireLogin(['pm', 'executive']);
       }
     } catch (err) {
       console.error(err);
-      document.getElementById('projectsTableBody').innerHTML = '<tr><td colspan="17" class="error-td">Failed to load project records.</td></tr>';
+      document.getElementById('projectsTableBody').innerHTML = '<tr><td colspan="27" class="error-td">Failed to load project records.</td></tr>';
     }
   }
 
@@ -1128,21 +1149,54 @@ $user = Auth::requireLogin(['pm', 'executive']);
     return Number(num || 0).toFixed(1) + '%';
   }
 
+  function formatDate(d) {
+    if (!d) return '-';
+    const s = String(d).trim().split(' ')[0];
+    if (!s || s === '0000-00-00') return '-';
+    const parts = s.split('-');
+    if (parts.length === 3) {
+      const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      if (!isNaN(dt.getTime())) {
+        return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+      }
+    }
+    return s;
+  }
+
+  function formatMonthClosing(d) {
+    if (!d) return '-';
+    const s = String(d).trim().split(' ')[0];
+    if (!s || s === '0000-00-00') return '-';
+    const parts = s.split('-');
+    if (parts.length >= 2) {
+      const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parts[2] ? parseInt(parts[2], 10) : 1);
+      if (!isNaN(dt.getTime())) {
+        return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }
+    }
+    return s;
+  }
+
   function renderProjects(records) {
     const tbody = document.getElementById('projectsTableBody');
     if (records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="17" class="empty-td">No project milestones found for this filter.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="27" class="empty-td">No project milestones found for this filter.</td></tr>';
       return;
     }
 
     tbody.innerHTML = records.map((r, idx) => {
+      const poStatusBadge = getPoStatusBadge(r.po_status);
       const msStatusBadge = getMilestoneBadge(r.milestone_status);
       const invStatusBadge = getInvoiceBadge(r.invoice_status);
-      const poSar = Number(r.total_po_value || 0).toLocaleString('en-US');
-      const msSar = Number(r.milestone_value || 0).toLocaleString('en-US');
-      const invSar = Number(r.invoice_amount || 0).toLocaleString('en-US');
-      const colSar = Number(r.collected_amount || 0).toLocaleString('en-US');
-      const penSar = Number(r.pending_collection || 0).toLocaleString('en-US');
+      const colStatusBadge = getCollectionBadge(r.collection_status);
+      const techReportBadge = getTechReportBadge(r.technical_report);
+
+      const poSar = Number(r.total_po_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const msSar = Number(r.milestone_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const invSar = Number(r.invoice_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const colSar = Number(r.collected_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const penSar = Number(r.pending_collection || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const toBeInvSar = Number(r.to_be_invoiced || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       return `
         <tr>
@@ -1150,19 +1204,29 @@ $user = Auth::requireLogin(['pm', 'executive']);
           <td><strong>${escapeHtml(r.project_manager || '-')}</strong></td>
           <td><strong class="proj-title">${escapeHtml(r.project_name || '')}</strong></td>
           <td>${escapeHtml(r.customer || '')}</td>
+          <td>${poStatusBadge}</td>
           <td><code>${escapeHtml(r.po_no || '-')}</code></td>
+          <td>${formatDate(r.po_date)}</td>
           <td class="sar-cell">${poSar}</td>
+          <td>${formatMonthClosing(r.expected_closing)}</td>
+          <td class="text-center"><span class="badge badge-gray">${r.months_to_close ?? '-'}</span></td>
           <td><span class="badge badge-purple">${escapeHtml(r.milestone_no || '-')}</span></td>
           <td><span class="scope-text" title="${escapeHtml(r.milestone_desc || '')}">${escapeHtml(r.milestone_desc || '-')}</span></td>
           <td class="sar-cell">${msSar}</td>
           <td>${msStatusBadge}</td>
-          <td><span class="missing-badge">${escapeHtml(r.technical_report || '-')}</span></td>
+          <td>${techReportBadge}</td>
           <td>${invStatusBadge}</td>
           <td><code>${escapeHtml(r.invoice_no || '-')}</code></td>
+          <td>${formatDate(r.invoice_date)}</td>
           <td class="sar-cell">${invSar}</td>
+          <td>${formatDate(r.collection_date)}</td>
           <td class="sar-cell" style="color:#059669;font-weight:600;">${colSar}</td>
+          <td>${colStatusBadge}</td>
           <td class="sar-cell" style="color:#B45309;font-weight:600;">${penSar}</td>
-          <td>
+          <td class="sar-cell" style="color:#2563EB;font-weight:600;">${toBeInvSar}</td>
+          <td><span class="scope-text" title="${escapeHtml(r.notes || '')}">${escapeHtml(r.notes || '-')}</span></td>
+          <td><span class="scope-text" title="${escapeHtml(r.additional_notes || '')}">${escapeHtml(r.additional_notes || '-')}</span></td>
+          <td class="text-center" style="white-space:nowrap;">
             <button class="btn-action edit" onclick="openEditModal(${r.id})">Update</button>
           </td>
         </tr>
@@ -1185,6 +1249,24 @@ $user = Auth::requireLogin(['pm', 'executive']);
     if (status === 'Fully Invoiced') cls = 'badge-green';
     else if (status === 'Partially Invoiced') cls = 'badge-amber';
     else if (status === 'Overdue') cls = 'badge-red';
+    return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
+  }
+
+  function getCollectionBadge(status) {
+    status = status || 'Pending';
+    let cls = 'badge-amber';
+    if (status === 'Fully Collected') cls = 'badge-green';
+    else if (status === 'Partially Collected') cls = 'badge-blue';
+    else if (status === 'Overdue') cls = 'badge-red';
+    return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
+  }
+
+  function getTechReportBadge(status) {
+    status = status || 'N/A';
+    let cls = 'badge-gray';
+    if (status === 'Submitted') cls = 'badge-green';
+    else if (status === 'Resubmitted') cls = 'badge-blue';
+    else if (status === 'In Progress') cls = 'badge-amber';
     return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
   }
 
@@ -1243,6 +1325,33 @@ $user = Auth::requireLogin(['pm', 'executive']);
     } else {
       colStatusSel.value = 'Partially Collected';
     }
+
+    // Live Excel Calculation for Months to Close: =(Year2 - Year1)*12 + Month2 - Month1 + 1
+    const poDateVal = document.getElementById('poDate').value;
+    const expCloseVal = document.getElementById('expectedClosing').value;
+    const monthsEl = document.getElementById('monthsToClose');
+    if (monthsEl) {
+      if (poDateVal && expCloseVal) {
+        try {
+          const d1 = new Date(poDateVal);
+          const d2 = new Date(expCloseVal);
+          if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+            const y1 = d1.getFullYear();
+            const m1 = d1.getMonth() + 1;
+            const y2 = d2.getFullYear();
+            const m2 = d2.getMonth() + 1;
+            const months = (y2 - y1) * 12 + (m2 - m1) + 1;
+            monthsEl.value = months;
+          } else {
+            monthsEl.value = '-';
+          }
+        } catch (e) {
+          monthsEl.value = '-';
+        }
+      } else {
+        monthsEl.value = '-';
+      }
+    }
   }
 
   function openCreateModal() {
@@ -1250,6 +1359,8 @@ $user = Auth::requireLogin(['pm', 'executive']);
     document.getElementById('editId').value = '';
     document.getElementById('modalTitle').innerText = 'Add New Project Milestone';
     document.getElementById('poDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('expectedClosing').value = '';
+    document.getElementById('monthsToClose').value = '-';
     recalcLive();
     document.getElementById('milestoneModal').classList.add('active');
   }
@@ -1267,6 +1378,8 @@ $user = Auth::requireLogin(['pm', 'executive']);
     document.getElementById('poStatus').value = rec.po_status || 'In Progress';
     document.getElementById('totalPoValue').value = rec.total_po_value || 0;
     document.getElementById('poDate').value = rec.po_date ? rec.po_date.split(' ')[0] : '';
+    document.getElementById('expectedClosing').value = rec.expected_closing ? rec.expected_closing.split(' ')[0] : '';
+    document.getElementById('monthsToClose').value = rec.months_to_close ?? '-';
     document.getElementById('milestoneNo').value = rec.milestone_no || '';
     document.getElementById('milestoneDesc').value = rec.milestone_desc || '';
     document.getElementById('milestoneValue').value = rec.milestone_value || 0;
@@ -1303,6 +1416,7 @@ $user = Auth::requireLogin(['pm', 'executive']);
       po_status: document.getElementById('poStatus').value,
       total_po_value: parseFloat(document.getElementById('totalPoValue').value) || 0,
       po_date: document.getElementById('poDate').value,
+      expected_closing: document.getElementById('expectedClosing').value,
       milestone_no: document.getElementById('milestoneNo').value,
       milestone_desc: document.getElementById('milestoneDesc').value,
       milestone_value: parseFloat(document.getElementById('milestoneValue').value) || 0,
@@ -1353,14 +1467,24 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
   function exportCsv() {
     if (allRecords.length === 0) return alert('No data to export');
-    const headers = ["No.", "PM", "Project Name", "Customer", "PO No", "Total PO SAR", "Milestone #", "Milestone Description", "Milestone SAR", "Status", "Technical Report", "Invoice Status", "Invoice No", "Invoiced SAR", "Collected SAR", "Pending SAR"];
+    const headers = [
+      "No.", "Project Manager", "Project Name", "Customer", "PO Status", "PO No.", "PO Date",
+      "Total PO Value (SAR)", "Expected Closing", "Months to Close", "Milestone #", "Milestone Description",
+      "Milestone Value (SAR)", "Milestone Status", "Technical Report", "Invoice Status", "Invoice No.",
+      "Invoice Date", "Invoice Amount (SAR)", "Collection Date", "Collected Amount (SAR)", "Collection Status",
+      "Pending Collection (SAR)", "To Be Invoiced (SAR)", "Notes", "Additional Notes"
+    ];
     const rows = allRecords.map((r, i) => [
       i + 1,
       `"${(r.project_manager||'').replace(/"/g, '""')}"`,
       `"${(r.project_name||'').replace(/"/g, '""')}"`,
       `"${(r.customer||'').replace(/"/g, '""')}"`,
+      `"${(r.po_status||'').replace(/"/g, '""')}"`,
       `"${(r.po_no||'').replace(/"/g, '""')}"`,
+      `"${(r.po_date||'').replace(/"/g, '""')}"`,
       r.total_po_value || 0,
+      `"${(r.expected_closing||'').replace(/"/g, '""')}"`,
+      r.months_to_close ?? '',
       `"${(r.milestone_no||'').replace(/"/g, '""')}"`,
       `"${(r.milestone_desc||'').replace(/"/g, '""')}"`,
       r.milestone_value || 0,
@@ -1368,16 +1492,22 @@ $user = Auth::requireLogin(['pm', 'executive']);
       `"${(r.technical_report||'').replace(/"/g, '""')}"`,
       `"${(r.invoice_status||'').replace(/"/g, '""')}"`,
       `"${(r.invoice_no||'').replace(/"/g, '""')}"`,
+      `"${(r.invoice_date||'').replace(/"/g, '""')}"`,
       r.invoice_amount || 0,
+      `"${(r.collection_date||'').replace(/"/g, '""')}"`,
       r.collected_amount || 0,
-      r.pending_collection || 0
+      `"${(r.collection_status||'').replace(/"/g, '""')}"`,
+      r.pending_collection || 0,
+      r.to_be_invoiced || 0,
+      `"${(r.notes||'').replace(/"/g, '""')}"`,
+      `"${(r.additional_notes||'').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `MVS_Awarded_Projects_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `MVS Awarded Projects ${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
