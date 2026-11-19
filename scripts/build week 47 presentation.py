@@ -38,7 +38,7 @@ COLOR_PURPLE_BG = RGBColor(243, 232, 255) # F3E8FF
 COLOR_PURPLE_TEXT = RGBColor(107, 33, 168) # 6B21A8
 
 # Helper function for concise bullets
-def populate_bullets(shape, bullet_items, font_size=8.6, space_after=3.0, line_spacing=1.14):
+def populate_bullets(shape, bullet_items, font_size=8.5, space_after=2.8, line_spacing=1.14):
     tf = shape.text_frame
     tf.word_wrap = True
     p_elements = tf._txBody.xpath("./a:p")
@@ -74,7 +74,7 @@ def populate_bullets(shape, bullet_items, font_size=8.6, space_after=3.0, line_s
         r3.font.bold = False
         r3.font.size = Pt(font_size)
 
-def set_badge(text_shape, text, text_color, font_size=7.8, bg_shape=None, bg_color=None, left=None, width=None):
+def set_badge(text_shape, text, text_color, font_size=7.6, bg_shape=None, bg_color=None, left=None, width=None):
     if bg_shape:
         if left is not None:
             bg_shape.left = left
@@ -183,12 +183,12 @@ if "TextBox 10" in s2_shapes and "Rounded Rectangle 9" in s2_shapes:
 
 if "TextBox 11" in s2_shapes:
     bullets1 = [
-        ("Portal Status", "Live and functional at portal.mvsksa.com with SSL security."),
+        ("Portal Status", "Live and fully functional at portal.mvsksa.com with active SSL security."),
         ("Sales Team Onboarding", "Login credentials distributed to all sales team members for active data entry."),
         ("PM Team Alignment", "Conducting system walkthrough and demo with Project Managers today."),
         ("Feature Enhancements", "Requested updates (26-column sync & formulas) targeted live by next week (ETA: 26 Nov).")
     ]
-    populate_bullets(s2_shapes["TextBox 11"], bullets1, font_size=8.5, space_after=3.0)
+    populate_bullets(s2_shapes["TextBox 11"], bullets1, font_size=8.5, space_after=2.8)
 
 # Card 2: Salam CCS — KPI Framework
 if "TextBox 14" in s2_shapes:
@@ -211,10 +211,10 @@ if "TextBox 16" in s2_shapes and "Rounded Rectangle 15" in s2_shapes:
 if "TextBox 17" in s2_shapes:
     bullets2 = [
         ("Data Pipeline", "Patrolling and supervisor logs integrated from Mr. Tahir Anjum."),
-        ("Scoring & Logic", "Developing calculation formulas for SLA compliance, CMR/PMR, and team rankings."),
-        ("Review Milestone", "Draft KPI model & executive scorecard targeted for management review (ETA: 26 Nov).")
+        ("Workload Reprioritization", "Sprint paused this week due to critical DCP-1 milestone delivery workload."),
+        ("Upcoming Week Commitment", "Roadmap planning, scoring logic, and executive draft prioritized for upcoming week (ETA: 26 Nov).")
     ]
-    populate_bullets(s2_shapes["TextBox 17"], bullets2, font_size=8.5, space_after=3.0)
+    populate_bullets(s2_shapes["TextBox 17"], bullets2, font_size=8.5, space_after=2.8)
 
 # Card 3: FO Route Survey Application (DCP-1)
 if "TextBox 20" in s2_shapes:
@@ -238,9 +238,10 @@ if "TextBox 23" in s2_shapes:
     bullets3 = [
         ("Original Scope", "Initial project scope survey documentation is being submitted today (19 Nov)."),
         ("Additional Scope", "Final supplementary route scope scheduled for submission by Monday (23 Nov)."),
+        ("Milestone 4 Certification", "Received Completion Certificate request from Mr. Adrian; currently preparing formal documentation."),
         ("Project Completion", "Marks full survey completion, pending any further data requests from Tawasul.")
     ]
-    populate_bullets(s2_shapes["TextBox 23"], bullets3, font_size=8.5, space_after=3.0)
+    populate_bullets(s2_shapes["TextBox 23"], bullets3, font_size=8.3, space_after=2.2)
 
 # Card 4: IT Infrastructure & Asset Governance
 if "TextBox 26" in s2_shapes:
@@ -267,7 +268,7 @@ if "TextBox 29" in s2_shapes:
         ("Monitor Deployment", "Procured & deployed 6 LG 27\" UltraGear monitors from Jarir Bookstore (5,148 SAR)."),
         ("Operations Support", "Ongoing network stability, workstation maintenance, and boardroom AV readiness.")
     ]
-    populate_bullets(s2_shapes["TextBox 29"], bullets4, font_size=8.5, space_after=3.0)
+    populate_bullets(s2_shapes["TextBox 29"], bullets4, font_size=8.5, space_after=2.8)
 
 # -------------------------------------------------------------
 # CREATE NEW SLIDE 3: Strategic Initiatives (Salam Automation & Odoo ERP)
@@ -344,13 +345,13 @@ if "TextBox 10" in s3_shapes and "Rounded Rectangle 9" in s3_shapes:
 if "TextBox 11" in s3_shapes:
     s3_shapes["TextBox 11"].height = 4300000
     bullets_salam = [
-        ("Roadmap & Execution Plan", "Currently actively working on the detailed automation roadmap and finalizing the implementation plan."),
-        ("Real-Time Operations Dashboard", "Designing executive dashboard view for live operational oversight, patrolling coverage, and SLA visibility."),
+        ("Resource Realignment", "Workload prioritized this week towards high-urgency DCP-1 route survey deliverables and milestone certificate."),
+        ("Upcoming Week Focus", "Dedicated focus scheduled for this upcoming week to finalize the detailed automation roadmap and execution plan."),
+        ("Operations Dashboard", "Designing real-time operational dashboard for executive oversight, field patrolling coverage, and SLA visibility."),
         ("Automated Data Pipelines", "Establishing automated data intake from field logs to eliminate manual delays and reporting bottlenecks."),
-        ("Performance Analytics Engine", "Structuring automated scoring models for PMR/CMR resolutions, preventive maintenance, and team rankings."),
         ("Target Review Milestone", "Targeting initial dashboard framework review with Salam CCS stakeholders by Next Thursday (ETA: 26 Nov).")
     ]
-    populate_bullets(s3_shapes["TextBox 11"], bullets_salam, font_size=9.2, space_after=9.0, line_spacing=1.2)
+    populate_bullets(s3_shapes["TextBox 11"], bullets_salam, font_size=9.0, space_after=8.5, line_spacing=1.18)
 
 # Configure Right Card: Odoo ERP Implementation
 if "Rounded Rectangle 12" in s3_shapes:
@@ -376,13 +377,13 @@ if "TextBox 16" in s3_shapes and "Rounded Rectangle 15" in s3_shapes:
 if "TextBox 17" in s3_shapes:
     s3_shapes["TextBox 17"].height = 4300000
     bullets_odoo = [
+        ("Odoo Partner Communication", "Dispatched formal technical query email today (19 Nov); actively awaiting solution proposal from Odoo team."),
+        ("Sample Product Baseline", "Prepared and submitted initial sample product list as requested by Odoo technical team for evaluation."),
+        ("Tag-Based Description System", "Configuring specialized tag-based descriptions for flexible item identification and dynamic quoting."),
         ("Commercial Templates Kickoff", "Work started on standardizing layout templates for Quotations, Purchase Orders (PO), and Proforma Invoices."),
-        ("Product Part Configuration", "Actively configuring the product catalog structure, technical items master, and product part definitions."),
-        ("Odoo Partner Coordination", "In continuous technical communication with Odoo implementation partner for specialized custom requirements."),
-        ("Tag-Based Description System", "Engineering dynamic tag-based item descriptions for accurate quotation generation and category management."),
-        ("Zero-Disruption Rollout Plan", "Targeting initial template & workflow sign-off by Next Thursday (ETA: 26 Nov), with zero disruption to active data.")
+        ("Zero-Disruption Rollout Plan", "Targeting initial template & workflow sign-off by Next Thursday (ETA: 26 Nov), preserving all active data.")
     ]
-    populate_bullets(s3_shapes["TextBox 17"], bullets_odoo, font_size=9.2, space_after=9.0, line_spacing=1.2)
+    populate_bullets(s3_shapes["TextBox 17"], bullets_odoo, font_size=9.0, space_after=8.5, line_spacing=1.18)
 
 # -------------------------------------------------------------
 # SLIDE 4: IT Assets & Telecom Inventory Dashboard (Slide 4 of 4)
