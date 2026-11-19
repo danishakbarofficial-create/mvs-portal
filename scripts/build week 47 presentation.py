@@ -15,7 +15,7 @@ DOWNLOADS_DIR = r"C:\Users\danis\Downloads\Week 47 presentations"
 os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 OUTPUT_PPTX_DOWNLOADS = os.path.join(DOWNLOADS_DIR, "MVS Weekly Tasks and IT Assets Presentation Week 47.pptx")
 
-ASSET_IMG_PATH = os.path.join(BASE_DIR, "Presentation", "updated asset dashboard week 46.png")
+ASSET_IMG_PATH = os.path.join(BASE_DIR, "Presentation", "updated asset dashboard week 47.png")
 
 prs = pptx.Presentation(TEMPLATE_PATH)
 
@@ -264,7 +264,7 @@ if "TextBox 28" in s2_shapes and "Rounded Rectangle 27" in s2_shapes:
 if "TextBox 29" in s2_shapes:
     bullets4 = [
         ("Team Capacity", "Onboarding an additional technical team resource this Sunday (22 Nov) to boost output."),
-        ("Asset Custody", "Active management of 83 IT hardware units (79 active, 4 buffer) and 50 telecom lines."),
+        ("Asset Custody", "Active management of 84 IT hardware units (78 active, 6 buffer) and 50 telecom lines."),
         ("Monitor Deployment", "Procured & deployed 6 LG 27\" UltraGear monitors from Jarir Bookstore (5,148 SAR)."),
         ("Operations Support", "Ongoing network stability, workstation maintenance, and boardroom AV readiness.")
     ]
