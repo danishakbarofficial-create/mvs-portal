@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
-$user = Auth::requireLogin(['admin']);
+$user = Auth::requireLogin(['admin', 'executive']);
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -6,8 +6,8 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../auth.php';
 require_once __DIR__ . '/../db.php';
 
-// Strict Admin Gate: Only super administrators can access this endpoint
-$currentUser = Auth::requireLogin(['admin']);
+// Strict Admin Gate: Only super administrators and executives can access this endpoint
+$currentUser = Auth::requireLogin(['admin', 'executive']);
 $pdo = Database::getConnection();
 
 $method = $_SERVER['REQUEST_METHOD'];

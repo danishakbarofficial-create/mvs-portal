@@ -136,7 +136,7 @@ $user = Auth::requireLogin(['executive']);
         <span class="nav-item-text" style="font-weight: 600;">Download Master Excel</span>
       </a>
 
-      <?php if ($user['role'] === 'admin'): ?>
+      <?php if ($user['role'] === 'admin' || $user['username'] === 'admin' || $user['role'] === 'executive'): ?>
       <div class="nav-section-label" style="color: #A78BFA; margin-top: 12px;">Administration</div>
       <a href="admin.php" class="nav-item">
         <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
