@@ -310,14 +310,32 @@ if ($method === 'DELETE') {
         exit;
     }
 
-    if ($user['role'] !== 'executive') {
-        http_response_code(403);
-        echo json_encode(['error' => 'Only Executive management can delete project milestones']);
+    $stmt = $pdo->prepare("SELECT * FROM v4_projects WHERE id = ?");
+    $stmt->execute([$id]);
+    $rec = $stmt->fetch();
+    if (!$rec) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Record not found']);
         exit;
     }
 
-    $stmt = $pdo->prepare("DELETE FROM v4_projects WHERE id = ?");
-    $stmt->execute([$id]);
-    echo json_encode(['success' => true, 'message' => 'Milestone record deleted']);
+    // Role check: Executive and Admin can delete any. PM can delete their assigned projects
+    if ($user['role'] === 'pm') {
+        if ($rec['project_manager'] && 
+            strcasecmp(trim($rec['project_manager']), trim($user['name'])) !== 0 &&
+            strcasecmp(trim($rec['project_manager']), trim($user['username'])) !== 0) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Unauthorized to delete this project milestone']);
+            exit;
+        }
+    } elseif ($user['role'] !== 'executive' && $user['role'] !== 'admin') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+
+    $stmtDel = $pdo->prepare("DELETE FROM v4_projects WHERE id = ?");
+    $stmtDel->execute([$id]);
+    echo json_encode(['success' => true, 'message' => 'Milestone record deleted successfully']);
     exit;
 }

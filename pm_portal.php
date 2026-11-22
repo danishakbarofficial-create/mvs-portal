@@ -1346,6 +1346,7 @@ $user = Auth::requireLogin(['pm', 'executive']);
           <td><span class="scope-text" title="${escapeHtml(r.additional_notes || '')}">${escapeHtml(r.additional_notes || '-')}</span></td>
           <td class="text-center" style="white-space:nowrap;">
             <button class="btn-action edit" onclick="openEditModal(${r.id})">Update</button>
+            <button class="btn-action delete" onclick="deleteMilestone(${r.id})" style="margin-left:4px; color:#DC2626; border-color:#FECACA; background:#FEF2F2;" title="Delete this milestone row">Delete</button>
           </td>
         </tr>
       `;
@@ -1706,6 +1707,30 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
   function closeModal() {
     document.getElementById('milestoneModal').classList.remove('active');
+  }
+
+  async function deleteMilestone(id) {
+    const rec = allRecords.find(r => r.id == id);
+    const label = rec ? `${rec.milestone_no || 'Milestone'} (${rec.project_name || ''})` : `Milestone #${id}`;
+    if (!confirm(`Are you sure you want to delete ${label}?\n\nThis record will be permanently deleted.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`api/v4_projects.php?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (json.success) {
+        await loadProjects();
+        const activeProj = document.getElementById('dashProjectSelect')?.value || '';
+        await loadDashboardMetrics(activeProj);
+      } else {
+        alert('Failed to delete milestone: ' + (json.error || 'Server error'));
+      }
+    } catch (err) {
+      alert('Error communicating with server: ' + err.message);
+    }
   }
 
   async function saveMilestone(e) {
