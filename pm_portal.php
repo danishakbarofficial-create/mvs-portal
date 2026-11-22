@@ -1742,19 +1742,6 @@ $user = Auth::requireLogin(['pm', 'executive']);
     if (isEdit) {
       payload.id = id;
       method = 'PUT';
-    } else {
-      // Check if project has an initial zero-value setup placeholder to replace
-      const placeholder = allRecords.find(r => 
-        r.project_name === projName && 
-        (parseFloat(r.milestone_value) || 0) === 0 && 
-        (parseFloat(r.invoice_amount) || 0) === 0 &&
-        (!r.invoice_no || r.invoice_no === '') &&
-        (r.milestone_desc === 'Initial Project Scope' || r.milestone_desc === 'Project Mobilization & Initial Setup' || !r.milestone_desc)
-      );
-      if (placeholder) {
-        payload.id = placeholder.id;
-        method = 'PUT';
-      }
     }
 
     const btn = document.getElementById('saveBtn');
