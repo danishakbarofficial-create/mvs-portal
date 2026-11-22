@@ -278,8 +278,9 @@ if ($user['role'] !== 'sales') {
     $projectParams = [];
 
     if ($isPm) {
-        $projectConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
+        $projectConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
         $projectParams[] = $user['name'];
+        $projectParams[] = $user['username'];
     }
 
     $selectedProject = $_GET['project_name'] ?? null;
@@ -293,13 +294,17 @@ if ($user['role'] !== 'sales') {
         $projectFilter = " WHERE " . implode(" AND ", $projectConditions);
     }
 
-    // B5: Awarded PO Value
-    $stmt = $pdo->prepare("SELECT SUM(milestone_value) as sum_ms, SUM(DISTINCT total_po_value) as sum_po FROM v4_projects $projectFilter");
+    // B5: Awarded PO Value - Group by project_name so each distinct project's total contracted PO value is counted once
+    $stmt = $pdo->prepare("SELECT project_name, MAX(total_po_value) as proj_po, SUM(milestone_value) as proj_ms FROM v4_projects $projectFilter GROUP BY project_name");
     $stmt->execute($projectParams);
-    $b5Row = $stmt->fetch();
-    $totalPoValue = floatval($b5Row['sum_ms'] ?? 0);
-    if ($totalPoValue == 0) {
-        $totalPoValue = floatval($b5Row['sum_po'] ?? 0);
+    $projPoRows = $stmt->fetchAll();
+    $totalPoValue = 0.0;
+    foreach ($projPoRows as $pr) {
+        $pPo = floatval($pr['proj_po'] ?? 0);
+        if ($pPo <= 0) {
+            $pPo = floatval($pr['proj_ms'] ?? 0);
+        }
+        $totalPoValue += $pPo;
     }
 
     // D5: Invoiced Amount & H5: Cash Collected
@@ -342,8 +347,9 @@ if ($user['role'] !== 'sales') {
         $pstConditions = ["po_status = ?"];
         $pstParams = [$pst];
         if ($isPm) {
-            $pstConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
+            $pstConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
             $pstParams[] = $user['name'];
+            $pstParams[] = $user['username'];
         }
         if ($selectedProject && $selectedProject !== 'All Projects' && $selectedProject !== 'All My Projects' && $selectedProject !== 'Company-Wide (All Projects)' && $selectedProject !== 'Company-Wide Projects') {
             $pstConditions[] = "project_name = ?";
@@ -381,8 +387,9 @@ if ($user['role'] !== 'sales') {
         $istConditions = ["invoice_status = ?"];
         $istParams = [$ist];
         if ($isPm) {
-            $istConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
+            $istConditions[] = "(LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
             $istParams[] = $user['name'];
+            $istParams[] = $user['username'];
         }
         if ($selectedProject && $selectedProject !== 'All Projects' && $selectedProject !== 'All My Projects' && $selectedProject !== 'Company-Wide (All Projects)' && $selectedProject !== 'Company-Wide Projects') {
             $istConditions[] = "project_name = ?";
@@ -446,8 +453,8 @@ if ($user['role'] !== 'sales') {
 
     // List of available projects for selector
     if ($isPm) {
-        $stmtPl = $pdo->prepare("SELECT DISTINCT project_name FROM v4_projects WHERE (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '') AND project_name IS NOT NULL AND project_name != '' ORDER BY project_name ASC");
-        $stmtPl->execute([$user['name']]);
+        $stmtPl = $pdo->prepare("SELECT DISTINCT project_name FROM v4_projects WHERE (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '') AND project_name IS NOT NULL AND project_name != '' ORDER BY project_name ASC");
+        $stmtPl->execute([$user['name'], $user['username']]);
         $projectsList = $stmtPl->fetchAll(PDO::FETCH_COLUMN);
         array_unshift($projectsList, 'All My Projects');
     } else {
@@ -469,8 +476,8 @@ if ($user['role'] !== 'sales') {
     ";
     $pmParams = [];
     if ($isPm) {
-        $pmSql .= " WHERE (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
-        $pmParams = [$user['name']];
+        $pmSql .= " WHERE (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
+        $pmParams = [$user['name'], $user['username']];
     }
     $pmSql .= " GROUP BY project_manager ORDER BY total_milestone_val DESC";
     $stmt = $pdo->prepare($pmSql);

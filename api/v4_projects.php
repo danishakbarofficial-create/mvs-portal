@@ -21,7 +21,9 @@ if ($method === 'GET') {
             echo json_encode(['error' => 'Record not found']);
             exit;
         }
-        if ($user['role'] === 'pm' && $row['project_manager'] && strcasecmp(trim($row['project_manager']), trim($user['name'])) !== 0) {
+        if ($user['role'] === 'pm' && $row['project_manager'] && 
+            strcasecmp(trim($row['project_manager']), trim($user['name'])) !== 0 &&
+            strcasecmp(trim($row['project_manager']), trim($user['username'])) !== 0) {
             http_response_code(403);
             echo json_encode(['error' => 'Unauthorized']);
             exit;
@@ -35,8 +37,9 @@ if ($method === 'GET') {
 
     // Role-based scoping: PMs only see their assigned projects (or unassigned)
     if ($user['role'] === 'pm') {
-        $query .= " AND (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
+        $query .= " AND (LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR LOWER(TRIM(project_manager)) = LOWER(TRIM(?)) OR project_manager IS NULL OR project_manager = '')";
         $params[] = $user['name'];
+        $params[] = $user['username'];
     } elseif (!empty($_GET['project_manager'])) {
         $query .= " AND LOWER(TRIM(project_manager)) = LOWER(TRIM(?))";
         $params[] = $_GET['project_manager'];
@@ -217,7 +220,9 @@ if ($method === 'PUT') {
         exit;
     }
 
-    if ($user['role'] === 'pm' && $existing['project_manager'] && strcasecmp(trim($existing['project_manager']), trim($user['name'])) !== 0) {
+    if ($user['role'] === 'pm' && $existing['project_manager'] && 
+        strcasecmp(trim($existing['project_manager']), trim($user['name'])) !== 0 &&
+        strcasecmp(trim($existing['project_manager']), trim($user['username'])) !== 0) {
         http_response_code(403);
         echo json_encode(['error' => 'Unauthorized to edit this project milestone']);
         exit;

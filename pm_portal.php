@@ -1203,15 +1203,21 @@ $user = Auth::requireLogin(['pm', 'executive']);
       const res = await fetch('api/v4_projects.php');
       const json = await res.json();
       if (json.success) {
-        allRecords = json.data;
+        allRecords = json.data || [];
         populateProjectDropdown(allRecords);
         populateMsProjectDropdown();
         renderProjects(allRecords);
-        calculateStats(allRecords);
+        try {
+          calculateStats(allRecords);
+        } catch (sErr) {
+          console.warn('calculateStats error:', sErr);
+        }
+      } else {
+        document.getElementById('projectsTableBody').innerHTML = `<tr><td colspan="27" class="error-td" style="text-align:left; padding:24px 20px; font-weight:500; color:#EF4444;">Failed to load project records: ${escapeHtml(json.error || 'Server error')}</td></tr>`;
       }
     } catch (err) {
       console.error(err);
-      document.getElementById('projectsTableBody').innerHTML = '<tr><td colspan="27" class="error-td">Failed to load project records.</td></tr>';
+      document.getElementById('projectsTableBody').innerHTML = `<tr><td colspan="27" class="error-td" style="text-align:left; padding:24px 20px; font-weight:500; color:#EF4444;">Failed to load project records: ${escapeHtml(err.message)}</td></tr>`;
     }
   }
 
@@ -1239,10 +1245,14 @@ $user = Auth::requireLogin(['pm', 'executive']);
     const totalPoVal = Object.values(poMap).reduce((acc, v) => acc + v, 0);
     const backlog = Math.max(0, totalPoVal - totalInvoiced);
 
-    document.getElementById('myPoVal').innerHTML = formatSar(totalPoVal) + ' <span class="curr">SAR</span>';
-    document.getElementById('myCollectedVal').innerHTML = formatSar(totalCollected) + ' <span class="curr">SAR</span>';
-    document.getElementById('myPendingVal').innerHTML = formatSar(totalPending) + ' <span class="curr">SAR</span>';
-    document.getElementById('myBacklogVal').innerHTML = formatSar(backlog) + ' <span class="curr">SAR</span>';
+    const elPo = document.getElementById('myPoVal');
+    if (elPo) elPo.innerHTML = formatSar(totalPoVal) + ' <span class="curr">SAR</span>';
+    const elCol = document.getElementById('myCollectedVal');
+    if (elCol) elCol.innerHTML = formatSar(totalCollected) + ' <span class="curr">SAR</span>';
+    const elPen = document.getElementById('myPendingVal');
+    if (elPen) elPen.innerHTML = formatSar(totalPending) + ' <span class="curr">SAR</span>';
+    const elBack = document.getElementById('myBacklogVal');
+    if (elBack) elBack.innerHTML = formatSar(backlog) + ' <span class="curr">SAR</span>';
   }
 
   function formatSar(num) {
@@ -1287,8 +1297,8 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
   function renderProjects(records) {
     const tbody = document.getElementById('projectsTableBody');
-    if (records.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="27" class="empty-td">No project milestones found for this filter.</td></tr>';
+    if (!records || records.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="27" class="empty-td" style="text-align:left; padding:24px 20px; font-weight:500; color:#64748B;">No project milestones found for this filter.</td></tr>';
       return;
     }
 
