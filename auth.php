@@ -48,7 +48,8 @@ class Auth {
 
     public static function login(string $username, string $password): array {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE (username = ? OR email = ?) AND status = 'active' LIMIT 1");
+        $username = trim($username);
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE (LOWER(TRIM(username)) = LOWER(?) OR LOWER(TRIM(email)) = LOWER(?)) AND (status = 'active' OR status IS NULL OR status = '') LIMIT 1");
         $stmt->execute([$username, $username]);
         $user = $stmt->fetch();
 
