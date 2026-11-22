@@ -6,11 +6,32 @@ class Database {
     private static ?PDO $instance = null;
     private static string $dbFile = __DIR__ . '/data/mvs_sales.sqlite';
 
+    // Hostinger Production MySQL Configuration
+    private static string $mysqlHost = 'localhost';
+    private static string $mysqlDb   = 'u370632335_mvs_portal';
+    private static string $mysqlUser = 'u370632335_portal_user';
+    private static string $mysqlPass = 'Mvs@123$';
+
     public static function getConnection(): PDO {
         if (self::$instance === null) {
+            // 1. Try Production MySQL first
+            try {
+                $dsn = "mysql:host=" . self::$mysqlHost . ";dbname=" . self::$mysqlDb . ";charset=utf8mb4";
+                $pdo = new PDO($dsn, self::$mysqlUser, self::$mysqlPass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_TIMEOUT => 2
+                ]);
+                self::$instance = $pdo;
+                return self::$instance;
+            } catch (Throwable $e) {
+                // If MySQL is unavailable (e.g. local environment), fallback to SQLite
+            }
+
+            // 2. Local SQLite Fallback
             $dataDir = __DIR__ . '/data';
             if (!is_dir($dataDir)) {
-                mkdir($dataDir, 0777, true);
+                @mkdir($dataDir, 0777, true);
             }
 
             $isNew = !file_exists(self::$dbFile);
