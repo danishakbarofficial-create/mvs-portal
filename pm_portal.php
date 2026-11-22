@@ -88,12 +88,20 @@ $user = Auth::requireLogin(['pm', 'executive']);
       <?php endif; ?>
 
       <div class="nav-section-label">Actions</div>
-      <a href="javascript:void(0)" onclick="openCreateModal()" class="nav-item">
+      <a href="javascript:void(0)" onclick="openProjectModal()" class="nav-item">
+        <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <line x1="12" y1="11" x2="12" y2="17"></line>
+          <line x1="9" y1="14" x2="15" y2="14"></line>
+        </svg>
+        <span class="nav-item-text">+ Add Project Details</span>
+      </a>
+      <a href="javascript:void(0)" onclick="openMilestoneModal()" class="nav-item">
         <svg class="nav-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <span class="nav-item-text">+ Add Milestone / PO</span>
+        <span class="nav-item-text">+ Add Milestone</span>
       </a>
     </nav>
 
@@ -182,13 +190,21 @@ $user = Auth::requireLogin(['pm', 'executive']);
               </select>
             </label>
           </div>
-          <div class="action-right">
-            <button class="btn btn-primary" onclick="openCreateModal()">
+          <div class="action-right" style="display:flex;gap:8px;align-items:center;">
+            <button class="btn" style="background-color: #0284C7; color: #ffffff; border: 1px solid #0369a1; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem;" onclick="openProjectModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                <line x1="12" y1="11" x2="12" y2="17"></line>
+                <line x1="9" y1="14" x2="15" y2="14"></line>
+              </svg>
+              <span>Add Project Details</span>
+            </button>
+            <button class="btn btn-primary" onclick="openMilestoneModal()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span>+ Add Milestone / PO</span>
+              <span>+ Add Milestone</span>
             </button>
           </div>
         </div>
@@ -387,12 +403,20 @@ $user = Auth::requireLogin(['pm', 'executive']);
               </svg>
               <span>Export CSV</span>
             </button>
-            <button class="btn btn-primary" onclick="openCreateModal()">
+            <button class="btn" style="background-color: #0284C7; color: #ffffff; border: 1px solid #0369a1; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem;" onclick="openProjectModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                <line x1="12" y1="11" x2="12" y2="17"></line>
+                <line x1="9" y1="14" x2="15" y2="14"></line>
+              </svg>
+              <span>Add Project Details</span>
+            </button>
+            <button class="btn btn-primary" onclick="openMilestoneModal()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span>Add Milestone / PO</span>
+              <span>+ Add Milestone</span>
             </button>
           </div>
         </div>
@@ -466,21 +490,20 @@ $user = Auth::requireLogin(['pm', 'executive']);
   </div>
 </div>
 
-<!-- Create/Edit Milestone Modal (Exact 26 v4 Columns) -->
-<div class="modal-overlay" id="milestoneModal">
+<!-- ===================================================================
+     MODAL 1: Add Project Details (Contract PO & Client Information)
+     =================================================================== -->
+<div class="modal-overlay" id="projectModal">
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-header-meta">
-        <span class="modal-badge">OPERATIONS &amp; DELIVERY</span>
-        <h2 id="modalTitle">Update Project Milestone &amp; Billing</h2>
+        <span class="modal-badge" style="background:#E0F2FE; color:#0369A1;">CONTRACT &amp; PO GOVERNANCE</span>
+        <h2>Add Project Details</h2>
       </div>
-      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Close">&times;</button>
+      <button type="button" class="modal-close-btn" onclick="closeProjectModal()" title="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="milestoneForm" onsubmit="saveMilestone(event)">
-        <input type="hidden" id="editId" name="id">
-
-        <!-- Card 1: Contract & PO Info -->
+      <form id="projectForm" onsubmit="saveProjectDetails(event)">
         <div class="form-card">
           <div class="form-card-header">
             <div class="form-card-icon icon-blue">
@@ -498,26 +521,26 @@ $user = Auth::requireLogin(['pm', 'executive']);
           <div class="form-row col-3">
             <div class="form-group">
               <label>Project Name <span class="req-star">*</span></label>
-              <input type="text" id="projectName" required placeholder="e.g. Air Base Infrastructure Project">
+              <input type="text" id="projModal_projectName" required placeholder="e.g. Air Base Infrastructure Project">
             </div>
             <div class="form-group">
               <label>Customer / Client <span class="req-star">*</span></label>
-              <input type="text" id="customer" required placeholder="e.g. Ministry of Defense">
+              <input type="text" id="projModal_customer" required placeholder="e.g. Ministry of Defense">
             </div>
             <div class="form-group">
               <label>Project Manager</label>
-              <input type="text" id="projectManager" value="<?= htmlspecialchars($user['name']) ?>" <?= ($user['role'] === 'pm') ? 'readonly style="background-color: #F1F5F9; color: #475569;"' : '' ?>>
+              <input type="text" id="projModal_projectManager" value="<?= htmlspecialchars($user['name']) ?>" <?= ($user['role'] === 'pm') ? 'readonly style="background-color: #F1F5F9; color: #475569;"' : '' ?>>
             </div>
           </div>
 
           <div class="form-row col-4">
             <div class="form-group">
               <label>PO No. <span class="req-star">*</span></label>
-              <input type="text" id="poNo" placeholder="e.g. PO-MOD-9942" required>
+              <input type="text" id="projModal_poNo" placeholder="e.g. PO-MOD-9942" required>
             </div>
             <div class="form-group">
               <label>PO Status</label>
-              <select id="poStatus">
+              <select id="projModal_poStatus">
                 <option value="In Progress">In Progress</option>
                 <option value="On Hold">On Hold</option>
                 <option value="Completed">Completed</option>
@@ -528,23 +551,107 @@ $user = Auth::requireLogin(['pm', 'executive']);
               <label>Total PO Value (SAR) <span class="req-star">*</span></label>
               <div class="input-with-prefix">
                 <span class="input-prefix">SAR</span>
-                <input type="number" step="0.01" id="totalPoValue" required placeholder="2000000">
+                <input type="number" step="0.01" id="projModal_totalPoValue" required placeholder="2000000">
               </div>
             </div>
             <div class="form-group">
               <label>PO Award Date</label>
-              <input type="date" id="poDate" onchange="recalcLive()">
+              <input type="date" id="projModal_poDate" onchange="recalcProjectLive()">
             </div>
           </div>
 
           <div class="form-row col-2">
             <div class="form-group">
               <label>Expected Closing Date</label>
-              <input type="date" id="expectedClosing" onchange="recalcLive()">
+              <input type="date" id="projModal_expectedClosing" onchange="recalcProjectLive()">
             </div>
             <div class="form-group">
               <label>Months to Close (Calculated)</label>
-              <input type="text" id="monthsToClose" readonly value="-" style="background:#F8FAFC;color:#0F172A;font-weight:700;">
+              <input type="text" id="projModal_monthsToClose" readonly value="-" style="background:#F8FAFC;color:#0F172A;font-weight:700;">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 18px;">
+          <div style="font-size: 0.72rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px;">
+            <span class="req-star">*</span> Required fields for contract PO registration
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+            <button type="submit" class="btn" id="saveProjectBtn" style="background-color: #0284C7; color: #ffffff; border: 1px solid #0369a1; font-weight: 600; padding: 8px 16px; border-radius: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Save Project Details</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================================
+     MODAL 2: Add / Update Project Milestone (Deliverables & Financials)
+     =================================================================== -->
+<div class="modal-overlay" id="milestoneModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-meta">
+        <span class="modal-badge">OPERATIONS &amp; DELIVERY</span>
+        <h2 id="modalTitle">Add New Project Milestone</h2>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="milestoneForm" onsubmit="saveMilestone(event)">
+        <input type="hidden" id="editId" name="id">
+
+        <!-- Inherited Project Hidden Attributes -->
+        <input type="hidden" id="projectName">
+        <input type="hidden" id="customer">
+        <input type="hidden" id="projectManager">
+        <input type="hidden" id="poNo">
+        <input type="hidden" id="poStatus">
+        <input type="hidden" id="totalPoValue">
+        <input type="hidden" id="poDate">
+        <input type="hidden" id="expectedClosing">
+        <input type="hidden" id="monthsToClose">
+
+        <!-- Select Project Card -->
+        <div class="form-card" style="border-left: 4px solid var(--color-primary); background: #F8FAFC;">
+          <div class="form-card-header" style="margin-bottom: 8px;">
+            <div class="form-card-icon icon-blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div class="form-card-title-box">
+              <span class="form-card-title">Select Project</span>
+              <span class="form-card-desc">Choose an existing awarded project to record milestone deliverables and financials</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-weight: 700; color: #1E293B; font-size: 0.82rem;">PROJECT NAME <span class="req-star">*</span></label>
+              <select id="msProjectSelect" required onchange="onProjectSelectChanged()" style="width: 100%; height: 42px; border: 1.5px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 0.92rem; font-weight: 600; background: #ffffff; color: #0F172A;">
+                <option value="">-- Choose Project --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Project Summary Strip -->
+          <div id="msProjectSummaryStrip" style="display:none; margin-top: 12px; padding: 12px 14px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; font-size: 0.82rem; color: #1E40AF;">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+              <div><strong>Customer:</strong> <span id="stripCustomer">-</span></div>
+              <div><strong>PO No:</strong> <code id="stripPoNo" style="background: #DBEAFE; padding: 2px 6px; border-radius: 4px; font-weight: 600;">-</code></div>
+              <div><strong>Total PO Value:</strong> <span id="stripTotalPo" style="font-weight: 700;">-</span> SAR</div>
+              <div><strong>PO Status:</strong> <span id="stripPoStatus" class="badge badge-blue">-</span></div>
+              <div><strong>Project Manager:</strong> <span id="stripPm">-</span></div>
+              <div><strong>Months to Close:</strong> <span id="stripMonths" class="badge badge-gray">-</span></div>
             </div>
           </div>
         </div>
@@ -1098,6 +1205,7 @@ $user = Auth::requireLogin(['pm', 'executive']);
       if (json.success) {
         allRecords = json.data;
         populateProjectDropdown(allRecords);
+        populateMsProjectDropdown();
         renderProjects(allRecords);
         calculateStats(allRecords);
       }
@@ -1354,15 +1462,183 @@ $user = Auth::requireLogin(['pm', 'executive']);
     }
   }
 
-  function openCreateModal() {
+  // ==========================================
+  // PROJECT DETAILS MODAL FUNCTIONS
+  // ==========================================
+  function openProjectModal() {
+    document.getElementById('projectForm').reset();
+    document.getElementById('projModal_poDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('projModal_expectedClosing').value = '';
+    document.getElementById('projModal_monthsToClose').value = '-';
+    recalcProjectLive();
+    document.getElementById('projectModal').classList.add('active');
+  }
+
+  function closeProjectModal() {
+    document.getElementById('projectModal').classList.remove('active');
+  }
+
+  function recalcProjectLive() {
+    const d1Val = document.getElementById('projModal_poDate').value;
+    const d2Val = document.getElementById('projModal_expectedClosing').value;
+    const el = document.getElementById('projModal_monthsToClose');
+    if (d1Val && d2Val) {
+      try {
+        const d1 = new Date(d1Val);
+        const d2 = new Date(d2Val);
+        if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+          const y1 = d1.getFullYear();
+          const m1 = d1.getMonth() + 1;
+          const y2 = d2.getFullYear();
+          const m2 = d2.getMonth() + 1;
+          el.value = (y2 - y1) * 12 + (m2 - m1) + 1;
+          return;
+        }
+      } catch (e) {}
+    }
+    el.value = '-';
+  }
+
+  async function saveProjectDetails(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveProjectBtn');
+    btn.innerText = 'Saving...';
+    btn.disabled = true;
+
+    const projName = document.getElementById('projModal_projectName').value.trim();
+    const payload = {
+      project_name: projName,
+      customer: document.getElementById('projModal_customer').value.trim(),
+      project_manager: document.getElementById('projModal_projectManager').value.trim(),
+      po_no: document.getElementById('projModal_poNo').value.trim(),
+      po_status: document.getElementById('projModal_poStatus').value,
+      total_po_value: parseFloat(document.getElementById('projModal_totalPoValue').value) || 0,
+      po_date: document.getElementById('projModal_poDate').value,
+      expected_closing: document.getElementById('projModal_expectedClosing').value,
+      milestone_no: 'Milestone 1',
+      milestone_desc: 'Initial Project Scope',
+      milestone_value: 0,
+      milestone_status: 'Pending',
+      technical_report: 'In Progress',
+      invoice_status: 'Not Invoiced',
+      invoice_no: '',
+      invoice_date: '',
+      invoice_amount: 0,
+      collection_status: 'Pending',
+      collection_date: '',
+      collected_amount: 0,
+      notes: 'Contract PO registered',
+      additional_notes: ''
+    };
+
+    try {
+      const res = await fetch('api/v4_projects.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        closeProjectModal();
+        await loadProjects();
+        const activeProj = document.getElementById('dashProjectSelect')?.value || '';
+        await loadDashboardMetrics(activeProj);
+        // Promptly open Milestone modal with newly registered project selected
+        openMilestoneModal(projName);
+      } else {
+        alert('Error: ' + (json.error || json.message));
+      }
+    } catch (err) {
+      alert('Request failed: ' + err.message);
+    } finally {
+      btn.innerText = 'Save Project Details';
+      btn.disabled = false;
+    }
+  }
+
+  // ==========================================
+  // MILESTONE MODAL FUNCTIONS
+  // ==========================================
+  function populateMsProjectDropdown(selectedVal = null) {
+    const sel = document.getElementById('msProjectSelect');
+    const uniqueProjects = [...new Set(allRecords.map(r => r.project_name).filter(Boolean))];
+    sel.innerHTML = '<option value="">-- Choose Project --</option>' + 
+      uniqueProjects.map(p => `<option value="${escapeHtml(p)}" ${p === selectedVal ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('');
+  }
+
+  function onProjectSelectChanged() {
+    const selProject = document.getElementById('msProjectSelect').value;
+    const strip = document.getElementById('msProjectSummaryStrip');
+    if (!selProject) {
+      strip.style.display = 'none';
+      document.getElementById('projectName').value = '';
+      document.getElementById('customer').value = '';
+      document.getElementById('projectManager').value = '';
+      document.getElementById('poNo').value = '';
+      document.getElementById('poStatus').value = 'In Progress';
+      document.getElementById('totalPoValue').value = 0;
+      document.getElementById('poDate').value = '';
+      document.getElementById('expectedClosing').value = '';
+      document.getElementById('monthsToClose').value = '-';
+      return;
+    }
+
+    const projRecords = allRecords.filter(r => r.project_name === selProject);
+    if (projRecords.length > 0) {
+      const p = projRecords[0];
+      document.getElementById('projectName').value = p.project_name || selProject;
+      document.getElementById('customer').value = p.customer || '';
+      document.getElementById('projectManager').value = p.project_manager || '';
+      document.getElementById('poNo').value = p.po_no || '';
+      document.getElementById('poStatus').value = p.po_status || 'In Progress';
+      document.getElementById('totalPoValue').value = p.total_po_value || 0;
+      document.getElementById('poDate').value = p.po_date ? p.po_date.split(' ')[0] : '';
+      document.getElementById('expectedClosing').value = p.expected_closing ? p.expected_closing.split(' ')[0] : '';
+      document.getElementById('monthsToClose').value = p.months_to_close ?? '-';
+
+      // Summary strip update
+      document.getElementById('stripCustomer').innerText = p.customer || '-';
+      document.getElementById('stripPoNo').innerText = p.po_no || '-';
+      document.getElementById('stripTotalPo').innerText = formatSar(p.total_po_value || 0);
+      document.getElementById('stripPoStatus').innerText = p.po_status || 'In Progress';
+      document.getElementById('stripPm').innerText = p.project_manager || '-';
+      document.getElementById('stripMonths').innerText = (p.months_to_close !== null && p.months_to_close !== undefined) ? p.months_to_close : '-';
+      strip.style.display = 'block';
+
+      // Auto-suggest milestone number
+      const editId = document.getElementById('editId').value;
+      if (!editId) {
+        const isPlaceholder = projRecords.length === 1 && (parseFloat(projRecords[0].milestone_value) || 0) === 0 && (parseFloat(projRecords[0].invoice_amount) || 0) === 0;
+        if (isPlaceholder) {
+          document.getElementById('milestoneNo').value = 'Milestone 1';
+        } else {
+          document.getElementById('milestoneNo').value = 'Milestone ' + (projRecords.length + 1);
+        }
+      }
+    }
+  }
+
+  function openMilestoneModal(presetProject = null) {
     document.getElementById('milestoneForm').reset();
     document.getElementById('editId').value = '';
     document.getElementById('modalTitle').innerText = 'Add New Project Milestone';
-    document.getElementById('poDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('expectedClosing').value = '';
-    document.getElementById('monthsToClose').value = '-';
+    
+    populateMsProjectDropdown(presetProject);
+    document.getElementById('msProjectSelect').disabled = false;
+
+    if (presetProject) {
+      document.getElementById('msProjectSelect').value = presetProject;
+      onProjectSelectChanged();
+    } else {
+      document.getElementById('msProjectSummaryStrip').style.display = 'none';
+    }
+
     recalcLive();
     document.getElementById('milestoneModal').classList.add('active');
+  }
+
+  function openCreateModal() {
+    openMilestoneModal();
   }
 
   function openEditModal(id) {
@@ -1371,6 +1647,12 @@ $user = Auth::requireLogin(['pm', 'executive']);
 
     document.getElementById('editId').value = rec.id;
     document.getElementById('modalTitle').innerText = 'Update Milestone #' + rec.id + ' (' + (rec.project_name || '') + ')';
+    
+    populateMsProjectDropdown(rec.project_name);
+    document.getElementById('msProjectSelect').value = rec.project_name || '';
+    document.getElementById('msProjectSelect').disabled = true; // Fixed project association for existing milestone
+
+    // Project hidden attributes
     document.getElementById('projectName').value = rec.project_name || '';
     document.getElementById('customer').value = rec.customer || '';
     document.getElementById('projectManager').value = rec.project_manager || '';
@@ -1380,11 +1662,24 @@ $user = Auth::requireLogin(['pm', 'executive']);
     document.getElementById('poDate').value = rec.po_date ? rec.po_date.split(' ')[0] : '';
     document.getElementById('expectedClosing').value = rec.expected_closing ? rec.expected_closing.split(' ')[0] : '';
     document.getElementById('monthsToClose').value = rec.months_to_close ?? '-';
+
+    // Summary strip
+    document.getElementById('stripCustomer').innerText = rec.customer || '-';
+    document.getElementById('stripPoNo').innerText = rec.po_no || '-';
+    document.getElementById('stripTotalPo').innerText = formatSar(rec.total_po_value || 0);
+    document.getElementById('stripPoStatus').innerText = rec.po_status || 'In Progress';
+    document.getElementById('stripPm').innerText = rec.project_manager || '-';
+    document.getElementById('stripMonths').innerText = (rec.months_to_close !== null && rec.months_to_close !== undefined) ? rec.months_to_close : '-';
+    document.getElementById('msProjectSummaryStrip').style.display = 'block';
+
+    // Section 2: Milestone Deliverables
     document.getElementById('milestoneNo').value = rec.milestone_no || '';
     document.getElementById('milestoneDesc').value = rec.milestone_desc || '';
     document.getElementById('milestoneValue').value = rec.milestone_value || 0;
     document.getElementById('milestoneStatus').value = rec.milestone_status || 'In Progress';
     document.getElementById('technicalReport').value = rec.technical_report || 'In Progress';
+
+    // Section 3: Invoicing & Financials
     document.getElementById('invoiceStatus').value = rec.invoice_status || 'Not Invoiced';
     document.getElementById('invoiceNo').value = rec.invoice_no || '';
     document.getElementById('invoiceDate').value = rec.invoice_date ? rec.invoice_date.split(' ')[0] : '';
@@ -1408,12 +1703,22 @@ $user = Auth::requireLogin(['pm', 'executive']);
     const id = document.getElementById('editId').value;
     const isEdit = Boolean(id);
 
+    const selProject = document.getElementById('msProjectSelect').value;
+    if (!selProject) {
+      alert('Please select a project from the dropdown first.');
+      return;
+    }
+
+    const projName = document.getElementById('projectName').value || selProject;
+    const customer = document.getElementById('customer').value;
+    const poNo = document.getElementById('poNo').value;
+
     const payload = {
-      project_name: document.getElementById('projectName').value,
-      customer: document.getElementById('customer').value,
+      project_name: projName,
+      customer: customer,
       project_manager: document.getElementById('projectManager').value,
-      po_no: document.getElementById('poNo').value,
-      po_status: document.getElementById('poStatus').value,
+      po_no: poNo,
+      po_status: document.getElementById('poStatus').value || 'In Progress',
       total_po_value: parseFloat(document.getElementById('totalPoValue').value) || 0,
       po_date: document.getElementById('poDate').value,
       expected_closing: document.getElementById('expectedClosing').value,
@@ -1433,11 +1738,25 @@ $user = Auth::requireLogin(['pm', 'executive']);
       additional_notes: document.getElementById('additionalNotes').value
     };
 
+    let method = 'POST';
     if (isEdit) {
       payload.id = id;
+      method = 'PUT';
+    } else {
+      // Check if project has an initial zero-value setup placeholder to replace
+      const placeholder = allRecords.find(r => 
+        r.project_name === projName && 
+        (parseFloat(r.milestone_value) || 0) === 0 && 
+        (parseFloat(r.invoice_amount) || 0) === 0 &&
+        (!r.invoice_no || r.invoice_no === '') &&
+        (r.milestone_desc === 'Initial Project Scope' || r.milestone_desc === 'Project Mobilization & Initial Setup' || !r.milestone_desc)
+      );
+      if (placeholder) {
+        payload.id = placeholder.id;
+        method = 'PUT';
+      }
     }
 
-    const method = isEdit ? 'PUT' : 'POST';
     const btn = document.getElementById('saveBtn');
     btn.innerText = 'Saving...';
     btn.disabled = true;
@@ -1516,6 +1835,13 @@ $user = Auth::requireLogin(['pm', 'executive']);
   document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     loadDashboardMetrics();
+
+    document.getElementById('projectModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'projectModal') closeProjectModal();
+    });
+    document.getElementById('milestoneModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'milestoneModal') closeModal();
+    });
   });
 </script>
 
