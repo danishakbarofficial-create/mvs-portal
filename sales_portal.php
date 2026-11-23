@@ -865,8 +865,9 @@ $user = Auth::requireLogin(['sales', 'executive']);
           <td>${formatDate(r.follow_up_date)}</td>
           <td><span class="next-step-pill">${escapeHtml(r.next_step || '-')}</span></td>
           <td><span class="scope-text" title="${escapeHtml(r.notes || '')}">${escapeHtml(r.notes || '-')}</span></td>
-          <td>
+          <td class="text-center" style="white-space:nowrap;">
             <button class="btn-action edit" onclick="openEditModal(${r.id})">Edit</button>
+            <button class="btn-action delete" onclick="deleteOpportunity(${r.id})" style="margin-left:4px; color:#DC2626; border-color:#FECACA; background:#FEF2F2;" title="Delete this opportunity">Delete</button>
           </td>
         </tr>
       `;
@@ -1044,6 +1045,28 @@ $user = Auth::requireLogin(['sales', 'executive']);
 
   function closeModal() {
     document.getElementById('opportunityModal').classList.remove('active');
+  }
+
+  async function deleteOpportunity(id) {
+    const rec = allRecords.find(r => r.id == id);
+    const label = rec ? `Quote #${rec.quotation_no || id} (${rec.client || rec.project_name || 'Opportunity'})` : `Inquiry #${id}`;
+    if (!confirm(`Are you sure you want to delete ${label}?\n\nThis opportunity will be permanently removed.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`api/v4_pipeline.php?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (json.success) {
+        await loadPipeline();
+      } else {
+        alert('Failed to delete: ' + (json.error || 'Server error'));
+      }
+    } catch (err) {
+      alert('Error communicating with server: ' + err.message);
+    }
   }
 
   async function saveOpportunity(e) {

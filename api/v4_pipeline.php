@@ -22,7 +22,9 @@ if ($method === 'GET') {
             exit;
         }
         // If sales rep, ensure they own it
-        if ($user['role'] === 'sales' && strcasecmp(trim($row['sales_person']), trim($user['name'])) !== 0) {
+        if ($user['role'] === 'sales' && 
+            strcasecmp(trim($row['sales_person']), trim($user['name'])) !== 0 &&
+            strcasecmp(trim($row['sales_person']), trim($user['username'])) !== 0) {
             http_response_code(403);
             echo json_encode(['error' => 'Unauthorized']);
             exit;
@@ -36,8 +38,9 @@ if ($method === 'GET') {
 
     // Role-based scoping: Sales reps only see their own records
     if ($user['role'] === 'sales') {
-        $query .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
+        $query .= " AND (LOWER(TRIM(sales_person)) = LOWER(TRIM(?)) OR LOWER(TRIM(sales_person)) = LOWER(TRIM(?)))";
         $params[] = $user['name'];
+        $params[] = $user['username'];
     } elseif (!empty($_GET['sales_person'])) {
         $query .= " AND LOWER(TRIM(sales_person)) = LOWER(TRIM(?))";
         $params[] = $_GET['sales_person'];
@@ -169,7 +172,9 @@ if ($method === 'PUT') {
         exit;
     }
 
-    if ($user['role'] === 'sales' && strcasecmp(trim($existing['sales_person']), trim($user['name'])) !== 0) {
+    if ($user['role'] === 'sales' && 
+        strcasecmp(trim($existing['sales_person']), trim($user['name'])) !== 0 &&
+        strcasecmp(trim($existing['sales_person']), trim($user['username'])) !== 0) {
         http_response_code(403);
         echo json_encode(['error' => 'Unauthorized to edit this record']);
         exit;
@@ -243,14 +248,32 @@ if ($method === 'DELETE') {
         exit;
     }
 
-    if ($user['role'] !== 'executive') {
-        http_response_code(403);
-        echo json_encode(['error' => 'Only Executive management can delete records']);
+    $stmt = $pdo->prepare("SELECT * FROM v4_pipeline WHERE id = ?");
+    $stmt->execute([$id]);
+    $rec = $stmt->fetch();
+    if (!$rec) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Record not found']);
         exit;
     }
 
-    $stmt = $pdo->prepare("DELETE FROM v4_pipeline WHERE id = ?");
-    $stmt->execute([$id]);
-    echo json_encode(['success' => true, 'message' => 'Record deleted']);
+    // Role check: Executive and Admin can delete any. Sales can delete their own records
+    if ($user['role'] === 'sales') {
+        if ($rec['sales_person'] && 
+            strcasecmp(trim($rec['sales_person']), trim($user['name'])) !== 0 &&
+            strcasecmp(trim($rec['sales_person']), trim($user['username'])) !== 0) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Unauthorized to delete this pipeline record']);
+            exit;
+        }
+    } elseif ($user['role'] !== 'executive' && $user['role'] !== 'admin') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+
+    $del = $pdo->prepare("DELETE FROM v4_pipeline WHERE id = ?");
+    $del->execute([$id]);
+    echo json_encode(['success' => true, 'message' => 'Pipeline record deleted successfully']);
     exit;
 }
