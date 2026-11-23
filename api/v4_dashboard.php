@@ -87,10 +87,10 @@ if ($user['role'] !== 'pm') {
     $wonVal = floatval($stmt->fetch()['won_value'] ?? 0);
     $salesMetrics['won_value'] = $wonVal;
 
-    // Under Pricing / Review Value
+    // Under Pricing / Review Value (Including opportunities where decision status is not yet decided)
     $prFilters = $baseFilters;
     $prParams = $baseParams;
-    $prFilters[] = "LOWER(decision_status) IN ('pricing in progress', 'under review', 'information gathering')";
+    $prFilters[] = "(LOWER(decision_status) IN ('pricing in progress', 'under review', 'information gathering') OR decision_status IS NULL OR TRIM(decision_status) = '')";
     if ($statusFilter !== '') {
         $prFilters[] = $statusFilter;
         $prParams = array_merge($prParams, $statusFilterParams);

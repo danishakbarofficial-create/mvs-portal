@@ -7,7 +7,6 @@ $pdo = Database::getConnection();
 $message = '';
 $status = '';
 $inserted = 0;
-$updated = 0;
 
 $rows = [
     [
@@ -291,7 +290,7 @@ $rows = [
         'quotation_valid_until' => null,
         'contact_person' => 'Mr. Zillur Rahman',
         'contact_details' => '510486217',
-        'decision_status' => 'Under Review',
+        'decision_status' => null,
         'missing_info' => 'None',
         'next_step' => 'Under client evaluation',
         'follow_up_date' => null,
@@ -339,7 +338,7 @@ $rows = [
         'quotation_valid_until' => null,
         'contact_person' => 'Mr. Zillur Rahman',
         'contact_details' => '510486217',
-        'decision_status' => 'Under Review',
+        'decision_status' => null,
         'missing_info' => 'None',
         'next_step' => 'Under client technical review',
         'follow_up_date' => null,
@@ -381,13 +380,13 @@ $rows = [
         'date_received' => '2026-10-08',
         'submission_date' => '2026-10-12',
         'quotation_no' => 'Manaual',
-        'quotation_status' => 'Open',
+        'quotation_status' => null,
         'total_sar' => 308748.36,
         'expected_closing' => null,
         'quotation_valid_until' => null,
         'contact_person' => 'Mr. Abdulellah',
         'contact_details' => '505913122',
-        'decision_status' => 'Under Review',
+        'decision_status' => null,
         'missing_info' => 'None',
         'next_step' => 'Under review',
         'follow_up_date' => null,
@@ -405,13 +404,13 @@ $rows = [
         'date_received' => '2026-10-29',
         'submission_date' => '2026-11-03',
         'quotation_no' => '1991',
-        'quotation_status' => 'Open',
+        'quotation_status' => null,
         'total_sar' => 167381.93,
         'expected_closing' => null,
         'quotation_valid_until' => null,
         'contact_person' => 'Mr. Zillur Rahman',
         'contact_details' => '510486217',
-        'decision_status' => 'Under Review',
+        'decision_status' => null,
         'missing_info' => 'None',
         'next_step' => 'Under review',
         'follow_up_date' => null,
@@ -427,7 +426,11 @@ foreach ($rows as $r) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
     try {
-        // Find existing MAX row_no to strictly preserve sequential data order
+        // Clean Re-Sync: Delete existing records for Nasir so exact sequence and all 17 rows are preserved without any duplicates
+        $delStmt = $pdo->prepare("DELETE FROM v4_pipeline WHERE LOWER(TRIM(sales_person)) = 'nasir'");
+        $delStmt->execute();
+
+        // Calculate starting sequence (preserving overall pipeline sequence)
         $maxRowStmt = $pdo->query("SELECT COALESCE(MAX(row_no), 0) FROM v4_pipeline");
         $baseRowNo = intval($maxRowStmt->fetchColumn());
 
@@ -440,46 +443,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
-        $stmtUpdate = $pdo->prepare("
-            UPDATE v4_pipeline SET
-                project_name = ?, client = ?, main_contractor = ?, consultant = ?,
-                scope_of_work = ?, date_received = ?, submission_date = ?, quotation_status = ?,
-                total_sar = ?, contact_person = ?, contact_details = ?, decision_status = ?,
-                missing_info = ?, next_step = ?, additional_notes = ?
-            WHERE id = ?
-        ");
-
-        foreach ($rows as $idx => $r) {
-            // Check if record already exists for Nasir by quotation_no + scope_of_work
-            $chk = $pdo->prepare("SELECT id, row_no FROM v4_pipeline WHERE LOWER(TRIM(sales_person)) = 'nasir' AND quotation_no = ? AND (scope_of_work = ? OR client = ?)");
-            $chk->execute([$r['quotation_no'], $r['scope_of_work'], $r['client']]);
-            $existing = $chk->fetch();
-
-            if ($existing) {
-                // Update existing record
-                $stmtUpdate->execute([
-                    $r['project_name'], $r['client'], $r['main_contractor'], $r['consultant'],
-                    $r['scope_of_work'], $r['date_received'], $r['submission_date'], $r['quotation_status'],
-                    $r['total_sar'], $r['contact_person'], $r['contact_details'], $r['decision_status'],
-                    $r['missing_info'], $r['next_step'], $r['additional_notes'],
-                    $existing['id']
-                ]);
-                $updated++;
-            } else {
-                // Insert new record continuing sequence
-                $baseRowNo++;
-                $stmtInsert->execute([
-                    $baseRowNo, 'Nasir', $r['project_name'], $r['client'], $r['main_contractor'], $r['consultant'],
-                    $r['scope_of_work'], $r['date_received'], $r['submission_date'], $r['quotation_no'], $r['quotation_status'],
-                    $r['total_sar'], $r['expected_closing'], $r['quotation_valid_until'], $r['contact_person'], $r['contact_details'],
-                    $r['decision_status'], $r['missing_info'], $r['next_step'], $r['follow_up_date'], $r['notes'], $r['additional_notes']
-                ]);
-                $inserted++;
-            }
+        foreach ($rows as $r) {
+            $baseRowNo++;
+            $stmtInsert->execute([
+                $baseRowNo,
+                'Nasir',
+                $r['project_name'],
+                $r['client'],
+                $r['main_contractor'],
+                $r['consultant'],
+                $r['scope_of_work'],
+                $r['date_received'],
+                $r['submission_date'],
+                $r['quotation_no'],
+                $r['quotation_status'],
+                $r['total_sar'],
+                $r['expected_closing'],
+                $r['quotation_valid_until'],
+                $r['contact_person'],
+                $r['contact_details'],
+                $r['decision_status'],
+                $r['missing_info'],
+                $r['next_step'],
+                $r['follow_up_date'],
+                $r['notes'],
+                $r['additional_notes']
+            ]);
+            $inserted++;
         }
 
         $status = 'success';
-        $message = "Import complete! Inserted: {$inserted} new record(s), Updated: {$updated} existing record(s) for Nasir. Sequence preserved!";
+        $message = "Kamyabi! Nasir ke tamam 17 records (samet un 4 entries ke jinka Decision Status blank tha) live database me exact sequence ke sath insert ho chuke hain!";
     } catch (Exception $e) {
         $status = 'error';
         $message = "Database error during import: " . $e->getMessage();
@@ -490,7 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MVS - Safe Import: Nasir Sales Pipeline</title>
+  <title>MVS - Safe Re-Sync: Nasir Sales Pipeline</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background: #F8FAFC; color: #0F172A; padding: 30px 20px; }
@@ -512,26 +506,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
     .badge { padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; display: inline-block; }
     .badge-won { background: #ECFDF5; color: #059669; }
     .badge-hold { background: #FEF3C7; color: #B45309; }
-    .badge-review { background: #EFF6FF; color: #2563EB; }
+    .badge-blank { background: #F1F5F9; color: #64748B; border: 1px dashed #CBD5E1; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Safe Import &amp; Sync: Nasir Sales Pipeline Register</h1>
+    <h1>Safe Re-Sync: Nasir Sales Pipeline Register (All 17 Records)</h1>
     <p>Sales Person: <strong>Nasir</strong> | Source File: <code>MVS PipeLines Tracking Nasir.xlsx</code></p>
 
     <div class="stats-bar">
-      <div>Total Opportunities: <strong>17</strong></div>
+      <div>Total Records: <strong>17 Opportunities</strong></div>
       <div>Total Pipeline Value: <strong><?= number_format($totalPipelineVal, 2) ?> SAR</strong></div>
       <div>Won Bids: <strong style="color:#059669;">9 Opportunities</strong></div>
-      <div>Under Review / On Hold: <strong style="color:#B45309;">8 Opportunities</strong></div>
-      <div>Sequence Integrity: <strong style="color:#10B981;">Strict Auto-Sequence</strong></div>
+      <div>On Hold: <strong style="color:#B45309;">3 Opportunities</strong></div>
+      <div>No Decision Status: <strong style="color:#64748B;">4 Opportunities (Included!)</strong></div>
+      <div>Sequence Integrity: <strong style="color:#10B981;">100% Sequential</strong></div>
     </div>
 
     <?php if ($status === 'success'): ?>
       <div class="alert-success">&#10003; <?= htmlspecialchars($message) ?></div>
       <div style="margin-bottom: 24px;">
-        <a href="sales_portal.php" class="btn btn-primary">&rarr; Open Sales Portal to View Nasir's Pipeline</a>
+        <a href="sales_portal.php" class="btn btn-primary">&rarr; Open Sales Portal to View All 17 Opportunities</a>
         <a href="executive_portal.php" class="btn btn-secondary">&rarr; Open Executive Command Center</a>
       </div>
     <?php elseif ($status === 'error'): ?>
@@ -539,11 +534,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
     <?php endif; ?>
 
     <form method="POST">
-      <button type="submit" class="btn btn-primary">&#10003; Click to Import Nasir's 17 Records Safely into Database</button>
+      <button type="submit" class="btn btn-primary">&#10003; Click to Re-Sync All 17 Records (Including 4 With No Status)</button>
       <a href="sales_portal.php" class="btn btn-secondary">&larr; Go to Sales Portal</a>
     </form>
 
-    <h3 style="margin-top: 26px; font-size: 1rem; color: #1E293B;">Preview of Nasir's 17 Opportunities to be Imported:</h3>
+    <h3 style="margin-top: 26px; font-size: 1rem; color: #1E293B;">Complete 17 Opportunities Preview:</h3>
     <table>
       <thead>
         <tr>
@@ -554,13 +549,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
           <th>Quotation #</th>
           <th>Submission Date</th>
           <th style="text-align:right;">Total incl. VAT (SAR)</th>
-          <th>Status</th>
+          <th>Decision Status</th>
           <th>Contact Person</th>
           <th>Notes / Updates</th>
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($rows as $idx => $r): ?>
+        <?php foreach ($rows as $r): ?>
           <tr>
             <td><?= $r['excel_no'] ?></td>
             <td>
@@ -575,12 +570,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['confirm'])) {
             <td><?= htmlspecialchars($r['submission_date'] ?: '-') ?></td>
             <td class="sar"><?= number_format($r['total_sar'], 2) ?></td>
             <td>
-              <?php
-                $badgeCls = 'badge-review';
-                if ($r['decision_status'] === 'Won') $badgeCls = 'badge-won';
-                elseif ($r['decision_status'] === 'On Hold') $badgeCls = 'badge-hold';
-              ?>
-              <span class="badge <?= $badgeCls ?>"><?= htmlspecialchars($r['decision_status']) ?></span>
+              <?php if (empty($r['decision_status'])): ?>
+                <span class="badge badge-blank">Not Decided / Blank</span>
+              <?php elseif ($r['decision_status'] === 'Won'): ?>
+                <span class="badge badge-won">Won</span>
+              <?php elseif ($r['decision_status'] === 'On Hold'): ?>
+                <span class="badge badge-hold">On Hold</span>
+              <?php else: ?>
+                <span class="badge" style="background:#EFF6FF; color:#2563EB;"><?= htmlspecialchars($r['decision_status']) ?></span>
+              <?php endif; ?>
             </td>
             <td>
               <?= htmlspecialchars($r['contact_person']) ?><br>

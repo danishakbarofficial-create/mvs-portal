@@ -310,6 +310,7 @@ $user = Auth::requireLogin(['sales', 'executive']);
             </div>
             <select id="statusFilter" onchange="filterPipeline()">
               <option value="">All Decision Statuses</option>
+              <option value="Not Decided">Not Decided / Blank</option>
               <option value="Information Gathering">Information Gathering</option>
               <option value="Under Review">Under Review</option>
               <option value="Pricing in Progress">Pricing in Progress</option>
@@ -875,7 +876,9 @@ $user = Auth::requireLogin(['sales', 'executive']);
   }
 
   function getQuotationStatusBadge(status) {
-    status = status || 'Open';
+    if (!status || !status.trim()) {
+      return `<span class="badge" style="background:#F1F5F9; color:#64748B;">Pending</span>`;
+    }
     const s = status.trim().toLowerCase();
     let cls = 'badge-blue';
     if (s === 'approved') cls = 'badge-green';
@@ -887,7 +890,9 @@ $user = Auth::requireLogin(['sales', 'executive']);
   }
 
   function getStatusBadge(status) {
-    status = status || 'Information Gathering';
+    if (!status || !status.trim()) {
+      return `<span class="badge" style="background:#F1F5F9; color:#64748B; border:1px dashed #CBD5E1;">Not Decided</span>`;
+    }
     const s = status.trim().toLowerCase();
     let cls = 'badge-gray';
     if (s === 'won') cls = 'badge-green';
@@ -917,8 +922,14 @@ $user = Auth::requireLogin(['sales', 'executive']);
     const filtered = allRecords.filter(r => {
       const matchesQ = !q || (r.project_name && r.project_name.toLowerCase().includes(q))
                           || (r.client && r.client.toLowerCase().includes(q))
-                          || (r.quotation_no && r.quotation_no.toLowerCase().includes(q));
-      const matchesStatus = !status || (r.decision_status === status);
+                          || (r.quotation_no && r.quotation_no.toLowerCase().includes(q))
+                          || (r.scope_of_work && r.scope_of_work.toLowerCase().includes(q));
+      let matchesStatus = true;
+      if (status === 'Not Decided') {
+        matchesStatus = !r.decision_status || r.decision_status.trim() === '';
+      } else if (status) {
+        matchesStatus = (r.decision_status === status);
+      }
       return matchesQ && matchesStatus;
     });
 

@@ -1578,7 +1578,9 @@ $user = Auth::requireLogin(['executive']);
   }
 
   function getStatusBadge(status) {
-    status = status || 'Information Gathering';
+    if (!status || !status.trim()) {
+      return `<span class="badge" style="background:#F1F5F9; color:#64748B; border:1px dashed #CBD5E1;">Not Decided</span>`;
+    }
     const s = status.trim().toLowerCase();
     let cls = 'badge-gray';
     if (s === 'won') cls = 'badge-green';
